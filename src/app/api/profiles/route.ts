@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import type { Database } from '@/lib/database.types';
 
 type CreateProfileRequest = {
   id: string;
@@ -32,16 +31,14 @@ export async function POST(request: Request) {
     }
 
     if (existingProfile) {
-      const updatePayload: Database['public']['Tables']['profiles']['Update'] = {
-        email,
-        full_name: fullName,
-        phone: phone ?? null,
-        updated_at: new Date().toISOString(),
-      };
-
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
-        .update(updatePayload)
+        .update({
+          email,
+          full_name: fullName,
+          phone: phone ?? null,
+          updated_at: new Date().toISOString(),
+        } as any)
         .eq('id', id);
 
       if (updateError) {
