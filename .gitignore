@@ -42,9 +42,5 @@ next-env.d.ts
 *.swo
 *~
 
-
-
-
-
-
-
+# Supabase Edge Functions (Deno, not for Next.js build)
+supabase/functions/
