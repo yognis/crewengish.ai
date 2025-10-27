@@ -57,10 +57,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 🔥 FIX: Parse FormData first, then get 'file' (not 'audio')
     const formData = await request.formData();
-    const audioFile = formData.get('audio') as File | null;
+    const audioFile = formData.get('file') as File | null;
 
     if (!audioFile) {
+      console.error('[TRANSCRIBE] No audio file. FormData keys:', Array.from(formData.keys()));
       return NextResponse.json(
         { error: 'No audio file provided' },
         { status: 400 }
