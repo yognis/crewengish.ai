@@ -252,7 +252,13 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     );
   }
 
-  const progress = `${question.question_number}/${session.total_questions}`;
+  const totalQuestions = Math.max(session.total_questions || 1, 1);
+  const currentQuestionNumber = question.question_number;
+  const progressLabel = `${currentQuestionNumber}/${totalQuestions}`;
+  const progressPercent = Math.min(
+    100,
+    Math.max(0, (currentQuestionNumber / totalQuestions) * 100)
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -267,7 +273,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           </button>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Clock className="h-4 w-4" />
-            <span>Soru {progress}</span>
+            <span>
+              Soru {progressLabel}
+            </span>
           </div>
           <button
             onClick={() => setShowExitModal(true)}
@@ -278,6 +286,22 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         </div>
 
         <div className="rounded-3xl bg-white p-8 shadow-lg">
+          <div className="mb-6">
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+              <span className="font-medium">
+                Soru {progressLabel}
+              </span>
+              <span>%{Math.round(progressPercent)} tamamlandı</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-thy-red transition-[width]"
+                style={{ width: `${progressPercent}%` }}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-full bg-thy-red px-4 py-1 text-sm font-semibold text-white">
               Soru {question.question_number}
