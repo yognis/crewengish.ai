@@ -609,7 +609,6 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           </div>
         </div>
       )}
-      )}
     </div>
   );
 }
