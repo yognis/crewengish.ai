@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/database.types';
 
 const SKILL_KEYS = ['fluency', 'grammar', 'vocabulary', 'pronunciation', 'relevance'] as const;
@@ -126,7 +126,7 @@ export function useDashboardData() {
     examSessions: [],
   });
 
-  const supabase = createClientComponentClient<Database>();
+  const supabase = createClient();
 
   useEffect(() => {
     async function fetchDashboardData() {

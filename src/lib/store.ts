@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { createClient } from './auth-client';
+import { createClient } from './supabase/client';
 import type { Database } from './database.types';
 import { logger } from './logger';
 
@@ -46,7 +46,7 @@ export const useAppStore = create<AppState>((set) => ({
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .single() as { data: Profile | null; error: any };
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
@@ -64,7 +64,7 @@ export const useAppStore = create<AppState>((set) => ({
               department: 'cabin_crew',
             })
             .select()
-            .single();
+            .single() as { data: Profile | null; error: any };
 
           if (createError) {
             console.error('Profile creation error:', createError);

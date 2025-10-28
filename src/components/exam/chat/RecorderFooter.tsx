@@ -65,11 +65,19 @@ export default function RecorderFooter({
   };
 
   return (
-    <div className="sticky bottom-0 left-0 right-0 z-50 bg-white shadow-lg">
+    <div
+      className="sticky bottom-0 left-0 right-0 z-50 bg-white shadow-lg"
+      role="region"
+      aria-label="Ses kaydı kontrolleri"
+    >
       <div className="border-t border-gray-200 bg-white p-4 pb-safe">
         <div className="mx-auto max-w-4xl space-y-3">
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div
+              className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+              role="alert"
+              aria-live="assertive"
+            >
               {error}
             </div>
           )}
@@ -80,21 +88,25 @@ export default function RecorderFooter({
               onClick={handleStartRecording}
               disabled={disabled}
               className="flex w-full max-w-xl items-center justify-center gap-2 rounded-lg bg-thy-red py-4 px-6 font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 hover:bg-thy-red/90 focus:outline-none focus:ring-2 focus:ring-thy-red focus:ring-offset-2 sm:mx-auto"
+              aria-label="Ses kaydını başlat"
             >
-              <Mic className="h-5 w-5" aria-hidden />
+              <Mic className="h-5 w-5" aria-hidden="true" />
               <span className="text-base">Konuşmaya Başla</span>
             </button>
           ) : null}
 
           {isRecording ? (
-            <div className="space-y-3">
+            <div className="space-y-3" role="status" aria-live="polite">
               <div className="flex items-center justify-center gap-3 text-thy-red">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-thy-red/10">
-                  <Mic className="h-6 w-6 animate-pulse" aria-hidden />
+                  <Mic className="h-6 w-6 animate-pulse" aria-hidden="true" />
                 </span>
                 <div className="text-center">
                   <p className="text-sm font-medium">Kayıt ediliyor...</p>
-                  <p className="font-mono text-xl font-bold tracking-wide">
+                  <p
+                    className="font-mono text-xl font-bold tracking-wide"
+                    aria-label={`Kayıt süresi ${formatDuration(duration)}`}
+                  >
                     {formatDuration(duration)}
                   </p>
                 </div>
@@ -104,6 +116,7 @@ export default function RecorderFooter({
                 type="button"
                 onClick={handleStopRecording}
                 className="w-full rounded-lg border-2 border-thy-red py-3 px-6 font-semibold text-thy-red transition hover:bg-thy-red/10 focus:outline-none focus:ring-2 focus:ring-thy-red focus:ring-offset-2"
+                aria-label="Kaydı durdur ve gönder"
               >
                 ⏸️ Durdur ve Gönder
               </button>
@@ -111,14 +124,22 @@ export default function RecorderFooter({
           ) : null}
 
           {isSubmitting && (
-            <div className="flex items-center justify-center gap-2 text-gray-600">
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+            <div
+              className="flex items-center justify-center gap-2 text-gray-600"
+              role="status"
+              aria-live="polite"
+            >
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
               <span className="text-sm">Değerlendiriliyor...</span>
             </div>
           )}
 
           {hasRecording && !isRecording && !isSubmitting && (
-            <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <div
+              className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
+              role="status"
+              aria-live="polite"
+            >
               <div>
                 <p className="text-sm font-medium text-gray-700">
                   Kayıt hazır, gönderiliyor...
@@ -132,9 +153,10 @@ export default function RecorderFooter({
                 onClick={() => {
                   clearRecording();
                 }}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-100"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-thy-red focus:ring-offset-2"
+                aria-label="Kaydı sil ve tekrar kaydet"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 Tekrar Kaydet
               </button>
             </div>

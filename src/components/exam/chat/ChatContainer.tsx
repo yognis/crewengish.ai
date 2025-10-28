@@ -53,6 +53,10 @@ export default function ChatContainer({
     <div
       ref={scrollContainerRef}
       className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6"
+      role="log"
+      aria-label="Sınav sohbet geçmişi"
+      aria-live="polite"
+      aria-atomic="false"
       style={{
         minHeight: "50vh",
         height: "100%",
@@ -63,10 +67,10 @@ export default function ChatContainer({
       {messages.length === 0 ? (
         <div className="flex min-h-[40vh] items-center justify-center text-gray-400">
           <div className="flex flex-col items-center gap-3 text-center">
-            <MessageCircle className="h-10 w-10" />
-            <p className="text-base font-medium">SÄ±nav baÅŸlamak Ã¼zere...</p>
+            <MessageCircle className="h-10 w-10" aria-hidden="true" />
+            <p className="text-base font-medium">Sınav başlamak üzere...</p>
             <p className="text-sm text-gray-500">
-              LÃ¼tfen yÃ¶nlendirmeleri takip edin ve mikrofonunuzu hazÄ±rlayÄ±n.
+              Lütfen yönlendirmeleri takip edin ve mikrofonunuzu hazırlayın.
             </p>
           </div>
         </div>
@@ -77,13 +81,13 @@ export default function ChatContainer({
       )}
 
       {isLoading && (
-        <div className="flex w-full justify-center py-6">
-          <Loader2 className="h-6 w-6 animate-spin text-thy-red" aria-hidden />
-          <span className="sr-only">Cevap hazÄ±rlanÄ±yor...</span>
+        <div className="flex w-full justify-center py-6" role="status">
+          <Loader2 className="h-6 w-6 animate-spin text-thy-red" aria-hidden="true" />
+          <span className="sr-only">Cevap hazırlanıyor...</span>
         </div>
       )}
 
-      <div ref={bottomAnchorRef} aria-hidden />
+      <div ref={bottomAnchorRef} aria-hidden="true" />
     </div>
   );
 }

@@ -146,19 +146,29 @@ export interface ExamSession {
   /** Supabase primary key for the session. */
   id: string;
   /** Identifier of the candidate taking the exam. */
-  userId: string;
+  user_id: string;
   /** Current lifecycle status of the session. */
-  status: "active" | "completed" | "abandoned";
+  status: "pending" | "in_progress" | "completed" | "exited";
   /** Question number the candidate is on. */
-  currentQuestionNumber: number;
+  current_question_number: number;
   /** Total number of questions in the exam (defaults to 20). */
-  totalQuestions: number;
-  /** Credits consumed to start or continue the session. */
-  creditsUsed: number;
+  total_questions: number;
+  /** Overall score for the completed exam. */
+  overall_score: number | null;
+  /** Credits charged to start the session. */
+  credits_charged: number;
+  /** Credits refunded if session was exited. */
+  credits_refunded: number;
   /** Timestamp when the session started. */
-  startedAt: Date;
+  started_at: string;
   /** Timestamp when the session finished, if applicable. */
-  completedAt?: Date;
+  completed_at: string | null;
+  /** Creation timestamp. */
+  created_at: string;
+  /** Last update timestamp. */
+  updated_at: string;
+  /** Idempotency key for session creation. */
+  idempotency_key: string | null;
 }
 
 export interface Question {

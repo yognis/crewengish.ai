@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-import { createClient } from '@/lib/auth-client';
+import { createClient } from '@/lib/supabase/client';
 import {
   Mail,
   ArrowLeft,

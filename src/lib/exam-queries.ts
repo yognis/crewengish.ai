@@ -1,7 +1,7 @@
 "use server";
 
 import { EXAM_CONSTANTS } from "@/constants/exam";
-import { createClient } from "@/lib/auth-client";
+import { createClient } from "@/lib/supabase/server";
 import type { ExamSession, Question } from "@/types/exam-chat";
 
 interface EvaluationResult {
@@ -17,7 +17,7 @@ interface EvaluationResult {
 export async function getExamSession(
   sessionId: string,
 ): Promise<ExamSession | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("exam_sessions")
@@ -40,7 +40,7 @@ export async function getCurrentQuestionNumber(
   sessionId: string,
 ): Promise<number> {
   const session = await getExamSession(sessionId);
-  return session?.currentQuestionNumber ?? EXAM_CONSTANTS.MIN_QUESTIONS;
+  return session?.current_question_number ?? EXAM_CONSTANTS.MIN_QUESTIONS;
 }
 
 /**
@@ -50,13 +50,13 @@ export async function updateSessionProgress(
   sessionId: string,
   questionNumber: number,
 ): Promise<void> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from("exam_sessions")
     .update({
-      currentQuestionNumber: questionNumber,
-      updatedAt: new Date().toISOString(),
+      current_question_number: questionNumber,
+      updated_at: new Date().toISOString(),
     })
     .eq("id", sessionId);
 
@@ -79,23 +79,35 @@ export async function getNextQuestion(sessionId: string): Promise<{
     return null;
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from("exam_questions")
     .select("*")
+    .eq("session_id", sessionId)
     .eq("question_number", currentNumber)
-    .single();
+    .single()) as {
+    data: {
+      question_number: number;
+      question_text: string;
+      question_context: string | null;
+    } | null;
+    error: any;
+  };
 
   if (error) {
     console.error("[getNextQuestion] Error:", error);
     return null;
   }
 
+  if (!data) {
+    return null;
+  }
+
   return {
     questionNumber: data.question_number,
     text: data.question_text,
-    scenario: data.scenario || undefined,
+    scenario: data.question_context || undefined,
   };
 }
 
@@ -105,11 +117,11 @@ export async function getNextQuestion(sessionId: string): Promise<{
 export async function getAllSessionQuestions(
   sessionId: string,
 ): Promise<Question[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("exam_responses")
-    .select("question_number, question_text, scenario")
+    .from("exam_questions")
+    .select("question_number, question_text, question_context")
     .eq("session_id", sessionId)
     .order("question_number", { ascending: true });
 
@@ -118,7 +130,11 @@ export async function getAllSessionQuestions(
     return [];
   }
 
-  return data as Question[];
+  return (data || []).map(row => ({
+    question_number: row.question_number,
+    question_text: row.question_text,
+    scenario: row.question_context
+  }));
 }
 
 /**
@@ -129,7 +145,7 @@ export async function uploadAudioFile(
   questionNumber: number,
   audioBlob: Blob,
 ): Promise<string | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const timestamp = Date.now();
   const filename = `${sessionId}/question-${questionNumber}-${timestamp}.webm`;
@@ -162,7 +178,7 @@ export async function evaluateAudioResponse(
   questionText: string,
   audioUrl: string,
 ): Promise<EvaluationResult | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   try {
     const { data, error } = await supabase.functions.invoke("exam-chat", {
@@ -201,18 +217,21 @@ export async function saveExamResponse(
   audioUrl: string,
   evaluation: EvaluationResult,
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
-  const { error } = await supabase.from("exam_responses").insert({
-    session_id: sessionId,
-    question_number: questionNumber,
-    audio_url: audioUrl,
-    transcript: evaluation.transcript,
-    score: evaluation.score,
-    strengths: evaluation.strengths,
-    improvements: evaluation.improvements,
-    created_at: new Date().toISOString(),
-  });
+  const { error } = await supabase
+    .from("exam_questions")
+    .update({
+      audio_url: audioUrl,
+      transcription: evaluation.transcript,
+      overall_score: evaluation.score,
+      strengths: evaluation.strengths,
+      improvements: evaluation.improvements,
+      submitted_at: new Date().toISOString(),
+      scored_at: new Date().toISOString(),
+    })
+    .eq("session_id", sessionId)
+    .eq("question_number", questionNumber);
 
   if (error) {
     console.error("[saveExamResponse] Error:", error);

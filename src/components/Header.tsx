@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Menu, X, CreditCard, User } from 'lucide-react';
-import { createClient } from '@/lib/auth-client';
+import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 
 export default function Header() {

@@ -1,5 +1,6 @@
 'use client';
 
+import { EXAM_CONSTANTS } from '@/constants/exam';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react';
 
 import { useAppStore } from '@/lib/store';
-import { createClient } from '@/lib/auth-client';
+import { createClient } from '@/lib/supabase/client';
 
 // Use process.env.NEXT_PUBLIC_* directly - Next.js inlines these at build time
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -191,7 +192,7 @@ const startExam = async () => {
   };
 
   const infoItems = [
-    { icon: Check, text: '20 konuşma sorusu' },
+    { icon: Check, text: `${EXAM_CONSTANTS.MAX_QUESTIONS} konuşma sorusu` },
     { icon: Zap, text: 'Anında AI değerlendirmesi' },
     { icon: Award, text: 'Detaylı geri bildirim' },
     { icon: Target, text: 'THY standartlarına uygun' },

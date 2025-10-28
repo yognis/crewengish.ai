@@ -22,7 +22,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-import { createClient } from '@/lib/auth-client';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');

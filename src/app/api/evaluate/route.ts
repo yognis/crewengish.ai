@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import OpenAI from 'openai';
 
+import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -29,7 +28,7 @@ interface EvaluationResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies });
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

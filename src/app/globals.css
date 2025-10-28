@@ -3,11 +3,65 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Dynamic viewport height for mobile (set by JS) */
+    --vh: 1vh;
+  }
+
   * {
     @apply border-gray-200;
   }
+
   body {
     @apply bg-white text-gray-900 font-sans;
+    /* Prevent bounce scroll on iOS */
+    overscroll-behavior: none;
+    /* Enable smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile viewport: use dynamic --vh instead of vh */
+  @media (max-width: 768px) {
+    .min-h-screen-mobile {
+      min-height: calc(var(--vh, 1vh) * 100);
+    }
+
+    .h-screen-mobile {
+      height: calc(var(--vh, 1vh) * 100);
+    }
+
+    .max-h-screen-mobile {
+      max-height: calc(var(--vh, 1vh) * 100);
+    }
+  }
+
+  /* Hide focus indicators by default (shown only during keyboard navigation) */
+  *:focus {
+    outline: none;
+  }
+
+  /* Show focus indicators when keyboard navigation is active */
+  body.keyboard-navigation-active *:focus {
+    @apply outline-2 outline-offset-2 outline-thy-red;
+  }
+
+  /* Always show focus for buttons and links (accessibility) */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    @apply outline-2 outline-offset-2 outline-thy-red;
+  }
+
+  /* Touch target size: minimum 44x44px for mobile (WCAG 2.1 AAA) */
+  @media (max-width: 768px) {
+    button,
+    a,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
