@@ -1,5 +1,7 @@
 'use client';
 
+import { EXAM_CONSTANTS } from '@/constants/exam';
+
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -161,7 +163,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         .select('id,status,total_questions,current_question_number,overall_score,user_id')
         .eq('id', params.sessionId)
         .single();
-      if (sessionError || !sessionData) throw sessionError || new Error('Sınav bulunamadı');
+      if (sessionError || !sessionData) throw sessionError || new Error('SÄ±nav bulunamadÄ±');
 
       setSession(sessionData as SessionData);
 
@@ -172,14 +174,14 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         .eq('session_id', params.sessionId)
         .eq('question_number', targetQuestionNumber)
         .single();
-      if (questionError || !questionData) throw questionError || new Error('Soru bulunamadı');
+      if (questionError || !questionData) throw questionError || new Error('Soru bulunamadÄ±');
 
       setQuestion(questionData as QuestionData);
       setRecordedBlob(null);
       setLastResult(null);
     } catch (error: any) {
       console.error('Session fetch error:', error);
-      toast.error(error?.message || 'Sınav yüklenemedi.');
+      toast.error(error?.message || 'SÄ±nav yÃ¼klenemedi.');
     } finally {
       setLoadingSession(false);
     }
@@ -187,7 +189,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
   const invokeExamFunction = async (body: Record<string, unknown>) => {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Supabase yapılandırması eksik.');
+      throw new Error('Supabase yapÄ±landÄ±rmasÄ± eksik.');
     }
 
     const {
@@ -218,7 +220,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
     if (!response.ok || result?.error) {
       const error: any = new Error(
-        result?.error || `Edge function hatası (HTTP ${response.status}).`
+        result?.error || `Edge function hatasÄ± (HTTP ${response.status}).`
       );
       error.status = response.status;
       error.details = result?.details;
@@ -292,9 +294,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     [menuOpen]
   );
 
-  const handleSubmitAnswer = async () => {
+  const handleSubmitAnswer = useCallback(async () => {
     if (!session || !question || !recordedBlob) {
-      toast.error('Önce yanıtınızı kaydedin.');
+      toast.error('Ã–nce yanÄ±tÄ±nÄ±zÄ± kaydedin.');
       return;
     }
 
@@ -323,7 +325,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         scoring: result.scoring,
       });
 
-      toast.success(`Puanınız: ${result.scoring.overall}/100`);
+      toast.success(`PuanÄ±nÄ±z: ${result.scoring.overall}/100`);
 
       if (result.completed) {
         router.push(`/exam/${session.id}/results`);
@@ -351,15 +353,22 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         const extraDetail =
           typeof error?.details === 'string'
             ? error.details
-            : 'Lütfen bekleyin.';
-        toast.error(`Çok fazla istek. ${extraDetail}`);
+            : 'LÃ¼tfen bekleyin.';
+        toast.error(`Ã‡ok fazla istek. ${extraDetail}`);
       } else {
-        toast.error(error?.message || 'Yanıt gönderilemedi.');
+        toast.error(error?.message || 'YanÄ±t gÃ¶nderilemedi.');
       }
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [
+    invokeExamFunction,
+    question,
+    recordedBlob,
+    router,
+    session,
+    supabase,
+  ]);
 
   const handleExitExam = async () => {
     if (!session) return;
@@ -369,11 +378,11 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         action: 'EXIT_EXAM',
         sessionId: session.id,
       });
-      toast.success('Sınavdan çıktınız.');
+      toast.success('SÄ±navdan Ã§Ä±ktÄ±nÄ±z.');
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Exit error:', error);
-      toast.error(error?.message || 'Sınavdan çıkılamadı.');
+      toast.error(error?.message || 'SÄ±navdan Ã§Ä±kÄ±lamadÄ±.');
     }
   };
 
@@ -382,13 +391,13 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-thy-red" />
-          <p className="text-gray-600">Sınav yükleniyor...</p>
+          <p className="text-gray-600">SÄ±nav yÃ¼kleniyor...</p>
         </div>
       </div>
     );
   }
 
-  const totalQuestions = Math.max(session.total_questions || 1, 1);
+  const totalQuestions = Math.max(session.total_questions || EXAM_CONSTANTS.MIN_QUESTIONS, EXAM_CONSTANTS.MIN_QUESTIONS);
   const currentQuestionNumber = question.question_number;
   const progressLabel = `${currentQuestionNumber}/${totalQuestions}`;
   const progressPercent = Math.min(
@@ -419,7 +428,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
               type="button"
               id={menuButtonId}
               ref={menuButtonRef}
-              aria-label="Sınav seçenekleri"
+              aria-label="SÄ±nav seÃ§enekleri"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-controls={menuOpen ? menuId : undefined}
@@ -447,9 +456,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
                   disabled
                   tabIndex={-1}
                   className="w-full cursor-not-allowed px-4 py-2 text-left text-sm text-gray-400"
-                  title="Yakında"
+                  title="YakÄ±nda"
                 >
-                  Sınavı Duraklat (yakında)
+                  SÄ±navÄ± Duraklat (yakÄ±nda)
                 </button>
                 <div className="my-1 border-t border-gray-100" aria-hidden="true" />
                 <button
@@ -462,7 +471,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
                     setShowExitModal(true);
                   }}
                 >
-                  Sınavdan Çık
+                  SÄ±navdan Ã‡Ä±k
                 </button>
               </div>
             )}
@@ -475,7 +484,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
               <span className="font-medium">
                 Soru {progressLabel}
               </span>
-              <span>%{Math.round(progressPercent)} tamamlandı</span>
+              <span>%{Math.round(progressPercent)} tamamlandÄ±</span>
             </div>
             <div className="h-2 w-full rounded-full bg-gray-200">
               <div
@@ -492,7 +501,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Mic className="h-4 w-4" />
-              Konuşma
+              KonuÅŸma
             </div>
           </div>
 
@@ -506,7 +515,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           <div className="mt-8">
             <ExamAudioRecorder
               onRecordingComplete={(blob) => setRecordedBlob(blob)}
-              maxDuration={120}
+              maxDuration={EXAM_CONSTANTS.MAX_RECORDING_TIME_SECONDS}
               disabled={isSubmitting}
             />
           </div>
@@ -520,14 +529,14 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Değerlendiriliyor...
+                  DeÄŸerlendiriliyor...
                 </>
               ) : (
-                'Cevabı Gönder'
+                'CevabÄ± GÃ¶nder'
               )}
             </button>
             <p className="text-xs text-gray-500">
-              Kaydı gönderdiğinizde AI değerlendirmesi otomatik olarak yapılır.
+              KaydÄ± gÃ¶nderdiÄŸinizde AI deÄŸerlendirmesi otomatik olarak yapÄ±lÄ±r.
             </p>
           </div>
         </div>
@@ -536,13 +545,13 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           <div className="rounded-3xl border border-green-100 bg-green-50 p-6">
             <div className="mb-4 flex items-center gap-2 text-green-700">
               <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold">Sonuçlar</span>
+              <span className="font-semibold">SonuÃ§lar</span>
             </div>
             <p className="text-3xl font-bold text-green-700">{lastResult.scoring.overall}/100</p>
             <p className="mt-2 text-sm text-gray-700">{lastResult.scoring.feedback}</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">Güçlü Yönler</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500">GÃ¼Ã§lÃ¼ YÃ¶nler</p>
                 <ul className="mt-2 list-inside list-disc text-sm text-gray-700">
                   {lastResult.scoring.strengths.map((item) => (
                     <li key={item}>{item}</li>
@@ -550,7 +559,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
                 </ul>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">Gelişim Alanları</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500">GeliÅŸim AlanlarÄ±</p>
                 <ul className="mt-2 list-inside list-disc text-sm text-gray-700">
                   {lastResult.scoring.improvements.map((item) => (
                     <li key={item}>{item}</li>
@@ -583,11 +592,11 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
             <div className="mb-4 flex items-center gap-3 text-red-600">
               <AlertTriangle className="h-6 w-6" aria-hidden="true" />
               <h3 id="exit-exam-title" className="text-lg font-semibold">
-                Sınavdan çıkmak istediğinizden emin misiniz?
+                SÄ±navdan Ã§Ä±kmak istediÄŸinizden emin misiniz?
               </h3>
             </div>
             <p id="exit-exam-description" className="text-sm text-gray-600">
-              İlerlemeniz kaydedilecek ancak kredi iade edilmeyecek.
+              Ä°lerlemeniz kaydedilecek ancak kredi iade edilmeyecek.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
@@ -596,14 +605,14 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
                 className="flex-1 rounded-xl border border-gray-200 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-thy-red"
                 onClick={closeExitModal}
               >
-                Vazgeç
+                VazgeÃ§
               </button>
               <button
                 type="button"
                 className="flex-1 rounded-xl bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-thy-red"
                 onClick={handleExitExam}
               >
-                Evet, Çık
+                Evet, Ã‡Ä±k
               </button>
             </div>
           </div>

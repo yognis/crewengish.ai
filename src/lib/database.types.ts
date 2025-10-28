@@ -39,6 +39,7 @@ export interface Database {
           phone?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       test_sessions: {
         Row: {
@@ -76,6 +77,7 @@ export interface Database {
           pronunciation_score?: number | null;
           completed_at?: string | null;
         };
+        Relationships: [];
       };
       test_responses: {
         Row: {
@@ -107,6 +109,7 @@ export interface Database {
           score?: number;
           feedback?: string;
         };
+        Relationships: [];
       };
       credit_transactions: {
         Row: {
@@ -126,6 +129,7 @@ export interface Database {
           created_at?: string;
         };
         Update: never;
+        Relationships: [];
       };
       exam_sessions: {
         Row: {
@@ -171,6 +175,7 @@ export interface Database {
           updated_at?: string;
           idempotency_key?: string | null;
         };
+        Relationships: [];
       };
       exam_questions: {
         Row: {
@@ -222,8 +227,13 @@ export interface Database {
           scored_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
 

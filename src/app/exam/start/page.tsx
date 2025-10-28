@@ -106,16 +106,22 @@ export default function ExamStartPage() {
   };
 
 const startExam = async () => {
+    console.log('━━━ STARTING NEW EXAM ━━━');
     if (!hasCredits) {
       toast.error('Sınav başlatmak için yeterli krediniz yok.');
+      console.warn('[StartExam] Not enough credits');
       return;
     }
 
     const granted = await ensureMicrophoneAccess();
-    if (!granted) return;
+    if (!granted) {
+      console.warn('[StartExam] Microphone permission denied');
+      return;
+    }
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       toast.error('Supabase yapılandırması eksik.');
+      console.error('[StartExam] Missing Supabase config');
       return;
     }
 
@@ -129,6 +135,7 @@ const startExam = async () => {
       if (!session?.user?.id) {
         toast.error('Oturum bilgisi alınamadı.');
         setStarting(false);
+        console.error('[StartExam] No user session found');
         return;
       }
 
@@ -141,6 +148,7 @@ const startExam = async () => {
         headers.Authorization = `Bearer ${session.access_token}`;
       }
 
+      console.log('[StartExam] Calling exam-chat edge function...');
       const response = await fetch(`${SUPABASE_URL}/functions/v1/exam-chat`, {
         method: 'POST',
         headers,
@@ -161,10 +169,18 @@ const startExam = async () => {
       if (!response.ok || result?.error) {
         const message =
           result?.error || `Sınav başlatılamadı (HTTP ${response.status}).`;
+        console.error('[StartExam] Edge function error:', message);
         throw new Error(message);
       }
 
+      console.log('[StartExam] Response:', result);
+      console.log('[StartExam] Session ID:', result?.sessionId);
       toast.success('Sınav başladı! Başarılar.');
+      if (result?.sessionId) {
+        console.log('[StartExam] Redirecting to exam page...');
+      } else {
+        console.warn('[StartExam] Missing sessionId in response');
+      }
       router.push(`/exam/${result.sessionId}`);
     } catch (error: any) {
       console.error('Exam start error:', error);
@@ -175,7 +191,7 @@ const startExam = async () => {
   };
 
   const infoItems = [
-    { icon: Check, text: '5 konuşma sorusu' },
+    { icon: Check, text: '20 konuşma sorusu' },
     { icon: Zap, text: 'Anında AI değerlendirmesi' },
     { icon: Award, text: 'Detaylı geri bildirim' },
     { icon: Target, text: 'THY standartlarına uygun' },

@@ -6,6 +6,7 @@ import OpenAI from 'openai';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { EXAM_CONSTANTS } from '@/constants/exam';
 import { logger } from '@/lib/logger';
 
 const openai = new OpenAI({
@@ -31,9 +32,9 @@ export async function POST(request: NextRequest) {
       request.ip;
     const identifier = user?.id || ipAddress || 'anonymous';
 
-    const rateCheck = checkRateLimit(`transcribe:${identifier}`, 10, 60_000);
+    const rateCheck = checkRateLimit(`transcribe:${identifier}`);
     const rateLimitHeaders = {
-      'X-RateLimit-Limit': '10',
+      'X-RateLimit-Limit': EXAM_CONSTANTS.RATE_LIMIT_REQUESTS.toString(),
       'X-RateLimit-Remaining': rateCheck.remaining.toString(),
       'X-RateLimit-Reset': rateCheck.resetTime.toString(),
     };

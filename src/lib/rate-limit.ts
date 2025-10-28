@@ -1,38 +1,59 @@
-// @ts-nocheck
-// Simple in-memory rate limiter (good for MVP, single-instance deployment)
-const rateLimit = new Map<string, { count: number; resetTime: number }>();
+import { EXAM_CONSTANTS } from "@/constants/exam";
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+interface RateLimitResult {
+  success: boolean;
+  remaining: number;
+  resetTime: number;
+}
+
+const SWEEP_PROBABILITY = 0.01;
+const rateLimitMap = new Map<string, RateLimitEntry>();
 
 export function checkRateLimit(
   identifier: string,
-  limit = 10,
-  windowMs = 60_000
-): { success: boolean; remaining: number; resetTime: number } {
+  limit: number = EXAM_CONSTANTS.RATE_LIMIT_REQUESTS,
+  windowMs: number = EXAM_CONSTANTS.RATE_LIMIT_WINDOW_MS,
+): RateLimitResult {
   const now = Date.now();
-  const record = rateLimit.get(identifier);
+  const entry = rateLimitMap.get(identifier);
 
-  // Occasionally sweep expired entries to keep the map small.
-  if (Math.random() < 0.01) {
-    for (const [key, value] of rateLimit.entries()) {
+  if (Math.random() < SWEEP_PROBABILITY) {
+    rateLimitMap.forEach((value, key) => {
       if (value.resetTime < now) {
-        rateLimit.delete(key);
+        rateLimitMap.delete(key);
       }
-    }
+    });
   }
 
-  if (!record || record.resetTime < now) {
+  if (!entry || entry.resetTime < now) {
     const resetTime = now + windowMs;
-    rateLimit.set(identifier, { count: 1, resetTime });
-    return { success: true, remaining: limit - 1, resetTime };
+    rateLimitMap.set(identifier, { count: 1, resetTime });
+    return {
+      success: true,
+      remaining: limit - 1,
+      resetTime,
+    };
   }
 
-  if (record.count >= limit) {
-    return { success: false, remaining: 0, resetTime: record.resetTime };
+  if (entry.count >= limit) {
+    return {
+      success: false,
+      remaining: 0,
+      resetTime: entry.resetTime,
+    };
   }
 
-  record.count += 1;
+  entry.count += 1;
+  rateLimitMap.set(identifier, entry);
+
   return {
     success: true,
-    remaining: limit - record.count,
-    resetTime: record.resetTime,
+    remaining: limit - entry.count,
+    resetTime: entry.resetTime,
   };
 }
