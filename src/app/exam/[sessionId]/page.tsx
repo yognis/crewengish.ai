@@ -191,18 +191,29 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
       setQuestion(questionData as QuestionData);
 
-      // NEW: Add question to messages
-      const questionMessage: AnyChatMessage = {
-        id: `q-${questionData.question_number}-${Date.now()}`,
-        type: 'question',
-        timestamp: new Date(),
-        questionNumber: questionData.question_number,
-        content: {
-          text: questionData.question_text,
-          scenario: questionData.question_context || undefined,
-        },
-      };
-      setMessages((prev) => [...prev, questionMessage]);
+      // Only add question to messages if it's not already there
+      setMessages((prev) => {
+        const alreadyExists = prev.some(
+          (msg) => msg.type === 'question' && msg.questionNumber === questionData.question_number
+        );
+
+        if (alreadyExists) {
+          console.log('[ExamPage] Question already in messages, skipping');
+          return prev;
+        }
+
+        const questionMessage: AnyChatMessage = {
+          id: `q-${questionData.question_number}-${Date.now()}`,
+          type: 'question',
+          timestamp: new Date(),
+          questionNumber: questionData.question_number,
+          content: {
+            text: questionData.question_text,
+            scenario: questionData.question_context || undefined,
+          },
+        };
+        return [...prev, questionMessage];
+      });
 
     } catch (error: any) {
       console.error('Session fetch error:', error);
@@ -321,24 +332,12 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
   // NEW: Handle audio submission from RecorderFooter
   const handleRecorderSubmit = useCallback(async (audioBlob: Blob) => {
-    if (!session || !question) {
-      toast.error('Önce yanıtınızı kaydedin.');
+    if (!session || !question || isSubmitting) {
+      if (isSubmitting) {
+        console.log('[ExamPage] Already submitting, ignoring duplicate call');
+      }
       return;
     }
-
-    // Add audio message immediately for better UX
-    const audioMessage: AnyChatMessage = {
-      id: `a-${question.question_number}-${Date.now()}`,
-      type: 'audio',
-      timestamp: new Date(),
-      questionNumber: question.question_number,
-      content: {
-        audioBlob,
-        audioUrl: URL.createObjectURL(audioBlob),
-        duration: 0, // Will be updated if needed
-      },
-    };
-    setMessages((prev) => [...prev, audioMessage]);
 
     setIsSubmitting(true);
     try {
@@ -360,6 +359,20 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         audioUrl,
       });
 
+      // Add audio message with transcription
+      const audioMessage: AnyChatMessage = {
+        id: `a-${question.question_number}-${Date.now()}`,
+        type: 'audio',
+        timestamp: new Date(),
+        questionNumber: question.question_number,
+        content: {
+          audioBlob,
+          audioUrl: URL.createObjectURL(audioBlob),
+          duration: 0,
+          transcription: result.transcript,
+        },
+      };
+
       // Add score message
       const scoreMessage: AnyChatMessage = {
         id: `s-${question.question_number}-${Date.now()}`,
@@ -373,7 +386,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           transcript: result.transcript,
         },
       };
-      setMessages((prev) => [...prev, scoreMessage]);
+
+      // Add both messages at once
+      setMessages((prev) => [...prev, audioMessage, scoreMessage]);
 
       toast.success(`Puanınız: ${result.scoring.overall}/100`);
 
@@ -428,6 +443,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     router,
     session,
     supabase,
+    isSubmitting,
   ]);
 
   const handleExitExam = async () => {
