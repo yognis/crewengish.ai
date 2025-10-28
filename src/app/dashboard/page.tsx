@@ -94,7 +94,7 @@ export default function DashboardPage() {
 
         {/* Chart or Empty */}
         <section>
-          {data.stats.totalTests === 0 ? (
+          {!loading && data.stats.totalTests === 0 ? (
             <EmptyState />
           ) : (
             <ScoreChart data={data.chartData} loading={loading} />
@@ -113,85 +113,6 @@ export default function DashboardPage() {
             <RecentTests tests={data.recentTests} totalTests={data.stats.totalTests} loading={loading} />
           </section>
         )}
-
-        {/* Exam History */}
-        <section>
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Son Sınavlarım</h3>
-                <p className="text-sm text-gray-500">Dinamik konuşma sınavı sonuçların</p>
-              </div>
-              <button
-                onClick={() => router.push('/exam/start')}
-                className="text-sm font-semibold text-thy-red hover:text-thy-darkRed"
-              >
-                Yeni sınav başlat
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((key) => (
-                  <div key={key} className="h-16 rounded-xl bg-gray-100 animate-pulse" />
-                ))}
-              </div>
-            ) : data.examSessions.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-gray-500">
-                Henüz konuşma sınavı tamamlamadın. İlk sınavını başlatmak için yukarıdaki kartı kullanabilirsin.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {data.examSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="flex flex-col gap-4 rounded-xl border border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm text-gray-500">{formatShortDate(session.created_at)}</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {session.overall_score ? `${session.overall_score}/100` : 'Değerlendiriliyor'}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          session.status === 'completed'
-                            ? 'bg-green-100 text-green-700'
-                            : session.status === 'in_progress'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : session.status === 'exited'
-                            ? 'bg-gray-100 text-gray-600'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        {session.status === 'completed'
-                          ? 'Tamamlandı'
-                          : session.status === 'in_progress'
-                          ? 'Devam ediyor'
-                          : session.status === 'exited'
-                          ? 'Çıkıldı'
-                          : 'Hazırlanıyor'}
-                      </span>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            session.status === 'completed'
-                              ? `/exam/${session.id}/results`
-                              : `/exam/${session.id}`
-                          )
-                        }
-                        className="text-sm font-medium text-thy-red hover:text-thy-darkRed"
-                      >
-                        Detayları Gör
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
       </main>
 
       <Footer />

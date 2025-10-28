@@ -58,9 +58,6 @@ export default function ChatContainer({
       aria-live="polite"
       aria-atomic="false"
       style={{
-        minHeight: "50vh",
-        height: "100%",
-        maxHeight: "100dvh",
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
       }}
     >
