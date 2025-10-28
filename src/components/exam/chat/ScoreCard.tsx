@@ -72,11 +72,13 @@ function ScoreCard({
           "max-w-2xl rounded-xl border-2 p-4 shadow-md sm:p-6",
           theme.border,
         )}
+        role="article"
+        aria-label={`Cevap değerlendirmesi: ${score} puan üzerinden 100`}
       >
         <div className="mb-4 flex items-center gap-3">
-          <Star className={cn("h-7 w-7", theme.text, "fill-current")} />
+          <Star className={cn("h-7 w-7", theme.text, "fill-current")} aria-hidden="true" />
           <div>
-            <p className={cn("text-3xl font-bold", theme.text)}>
+            <p className={cn("text-3xl font-bold", theme.text)} aria-label={`Puanınız ${score} üzerinden 100`}>
               {score}/100
             </p>
             <p className="text-xs text-gray-600">{theme.label}</p>
@@ -87,10 +89,10 @@ function ScoreCard({
 
         <div className="mb-4">
           <div className="mb-2 flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <h4 className="text-base font-semibold">Strengths</h4>
+            <CheckCircle className="h-5 w-5 text-green-600" aria-hidden="true" />
+            <h4 className="text-base font-semibold">Güçlü Yönler</h4>
           </div>
-          <ul className="space-y-1 text-sm text-green-700">
+          <ul className="space-y-1 text-sm text-green-700" aria-label="Güçlü yönler listesi">
             {safeStrengths.map((strength, index) => (
               <li key={`${strength}-${index}`}>- {strength}</li>
             ))}
@@ -99,10 +101,10 @@ function ScoreCard({
 
         <div className="mb-4">
           <div className="mb-2 flex items-center gap-2">
-            <Target className="h-5 w-5 text-orange-600" />
-            <h4 className="text-base font-semibold">Improvements</h4>
+            <Target className="h-5 w-5 text-orange-600" aria-hidden="true" />
+            <h4 className="text-base font-semibold">Gelişim Alanları</h4>
           </div>
-          <ul className="space-y-1 text-sm text-orange-700">
+          <ul className="space-y-1 text-sm text-orange-700" aria-label="Gelişim alanları listesi">
             {safeImprovements.map((improvement, index) => (
               <li key={`${improvement}-${index}`}>- {improvement}</li>
             ))}
@@ -110,10 +112,10 @@ function ScoreCard({
         </div>
 
         <details className="mt-4 rounded-lg bg-white/60 p-3 transition hover:bg-white/80">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-700">
-            Transcript
+          <summary className="cursor-pointer text-sm font-semibold text-gray-700" aria-label="Transkript metnini göster/gizle">
+            Transkript
           </summary>
-          <blockquote className="mt-2 border-l-2 border-gray-300 pl-4 text-sm italic text-gray-600">
+          <blockquote className="mt-2 border-l-2 border-gray-300 pl-4 text-sm italic text-gray-600" role="blockquote">
             "{transcript}"
           </blockquote>
         </details>
