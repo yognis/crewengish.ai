@@ -10,17 +10,27 @@ import {
   ArrowLeft,
   Loader2,
   AlertTriangle,
-  CheckCircle2,
   Clock,
-  Mic,
   X,
   MoreVertical,
 } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
-import { ExamAudioRecorder } from '@/components/ExamAudioRecorder';
 import { getAudioFileExtension } from '@/lib/audio';
+
+// NEW: Chat architecture imports
+import ChatContainer from '@/components/exam/chat/ChatContainer';
+import RecorderFooter from '@/components/exam/chat/RecorderFooter';
+import QuestionBubble from '@/components/exam/chat/QuestionBubble';
+import AudioBubble from '@/components/exam/chat/AudioBubble';
+import ScoreCard from '@/components/exam/chat/ScoreCard';
+import type { AnyChatMessage, ChatMessage } from '@/types/exam-chat';
+import {
+  isQuestionMessage,
+  isAudioMessage,
+  isScoreMessage,
+} from '@/types/exam-chat';
 
 // Use process.env.NEXT_PUBLIC_* directly - Next.js inlines these at build time
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -61,9 +71,11 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   const [session, setSession] = useState<SessionData | null>(null);
   const [question, setQuestion] = useState<QuestionData | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+
+  // NEW: Messages array for chat history
+  const [messages, setMessages] = useState<AnyChatMessage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastResult, setLastResult] = useState<SubmissionResult | null>(null);
+
   const [showExitModal, setShowExitModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -77,6 +89,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
       menuButtonRef.current?.focus();
     });
   }, []);
+
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
@@ -177,8 +190,20 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
       if (questionError || !questionData) throw questionError || new Error('Soru bulunamadı');
 
       setQuestion(questionData as QuestionData);
-      setRecordedBlob(null);
-      setLastResult(null);
+
+      // NEW: Add question to messages
+      const questionMessage: AnyChatMessage = {
+        id: `q-${questionData.question_number}-${Date.now()}`,
+        type: 'question',
+        timestamp: new Date(),
+        questionNumber: questionData.question_number,
+        content: {
+          text: questionData.question_text,
+          scenario: questionData.question_context || undefined,
+        },
+      };
+      setMessages((prev) => [...prev, questionMessage]);
+
     } catch (error: any) {
       console.error('Session fetch error:', error);
       toast.error(error?.message || 'Sınav yüklenemedi.');
@@ -189,7 +214,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
   const invokeExamFunction = async (body: Record<string, unknown>) => {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Supabase yapÄ±landÄ±rmasÄ± eksik.');
+      throw new Error('Supabase yapılandırması eksik.');
     }
 
     const {
@@ -220,7 +245,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
     if (!response.ok || result?.error) {
       const error: any = new Error(
-        result?.error || `Edge function hatasÄ± (HTTP ${response.status}).`
+        result?.error || `Edge function hatası (HTTP ${response.status}).`
       );
       error.status = response.status;
       error.details = result?.details;
@@ -294,20 +319,35 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     [menuOpen]
   );
 
-  const handleSubmitAnswer = useCallback(async () => {
-    if (!session || !question || !recordedBlob) {
-      toast.error('Ã–nce yanÄ±tÄ±nÄ±zÄ± kaydedin.');
+  // NEW: Handle audio submission from RecorderFooter
+  const handleRecorderSubmit = useCallback(async (audioBlob: Blob) => {
+    if (!session || !question) {
+      toast.error('Önce yanıtınızı kaydedin.');
       return;
     }
 
+    // Add audio message immediately for better UX
+    const audioMessage: AnyChatMessage = {
+      id: `a-${question.question_number}-${Date.now()}`,
+      type: 'audio',
+      timestamp: new Date(),
+      questionNumber: question.question_number,
+      content: {
+        audioBlob,
+        audioUrl: URL.createObjectURL(audioBlob),
+        duration: 0, // Will be updated if needed
+      },
+    };
+    setMessages((prev) => [...prev, audioMessage]);
+
     setIsSubmitting(true);
     try {
-      const blobType = recordedBlob.type || 'audio/webm';
+      const blobType = audioBlob.type || 'audio/webm';
       const extension = getAudioFileExtension(blobType);
       const filePath = `${session.user_id}/${session.id}/q${question.question_number}_${Date.now()}.${extension}`;
       const { error: uploadError } = await supabase.storage
         .from('test-recordings')
-        .upload(filePath, recordedBlob, { contentType: blobType });
+        .upload(filePath, audioBlob, { contentType: blobType });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('test-recordings').getPublicUrl(filePath);
@@ -320,12 +360,22 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         audioUrl,
       });
 
-      setLastResult({
-        transcript: result.transcript,
-        scoring: result.scoring,
-      });
+      // Add score message
+      const scoreMessage: AnyChatMessage = {
+        id: `s-${question.question_number}-${Date.now()}`,
+        type: 'score',
+        timestamp: new Date(),
+        questionNumber: question.question_number,
+        content: {
+          score: result.scoring.overall,
+          strengths: result.scoring.strengths,
+          improvements: result.scoring.improvements,
+          transcript: result.transcript,
+        },
+      };
+      setMessages((prev) => [...prev, scoreMessage]);
 
-      toast.success(`PuanÄ±nÄ±z: ${result.scoring.overall}/100`);
+      toast.success(`Puanınız: ${result.scoring.overall}/100`);
 
       if (result.completed) {
         router.push(`/exam/${session.id}/results`);
@@ -344,8 +394,19 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           question_text: result.nextQuestion.questionText,
           question_context: result.nextQuestion.questionContext,
         });
-        setRecordedBlob(null);
-        setLastResult(null);
+
+        // Add next question to messages
+        const nextQuestionMessage: AnyChatMessage = {
+          id: `q-${result.nextQuestion.questionNumber}-${Date.now()}`,
+          type: 'question',
+          timestamp: new Date(),
+          questionNumber: result.nextQuestion.questionNumber,
+          content: {
+            text: result.nextQuestion.questionText,
+            scenario: result.nextQuestion.questionContext || undefined,
+          },
+        };
+        setMessages((prev) => [...prev, nextQuestionMessage]);
       }
     } catch (error: any) {
       console.error('Submission error:', error);
@@ -364,7 +425,6 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   }, [
     invokeExamFunction,
     question,
-    recordedBlob,
     router,
     session,
     supabase,
@@ -384,6 +444,45 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
       console.error('Exit error:', error);
       toast.error(error?.message || 'Sınavdan çıkılamadı.');
     }
+  };
+
+  // NEW: Render messages in chat
+  const renderMessage = (msg: ChatMessage) => {
+    if (isQuestionMessage(msg)) {
+      return (
+        <QuestionBubble
+          key={msg.id}
+          questionNumber={msg.questionNumber}
+          text={msg.content.text}
+          scenario={msg.content.scenario}
+        />
+      );
+    }
+
+    if (isAudioMessage(msg)) {
+      return (
+        <AudioBubble
+          key={msg.id}
+          audioUrl={msg.content.audioUrl}
+          duration={msg.content.duration}
+          transcription={msg.content.transcription}
+        />
+      );
+    }
+
+    if (isScoreMessage(msg)) {
+      return (
+        <ScoreCard
+          key={msg.id}
+          score={msg.content.score}
+          strengths={msg.content.strengths}
+          improvements={msg.content.improvements}
+          transcript={msg.content.transcript}
+        />
+      );
+    }
+
+    return null;
   };
 
   if (loadingSession || !session || !question) {
@@ -406,171 +505,106 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center gap-2 text-sm text-thy-red"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Dashboard
-          </button>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="h-4 w-4" />
-            <span>
-              Soru {progressLabel}
-            </span>
-          </div>
-          <div className="relative">
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      {/* Header with progress */}
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-5xl px-4 py-4">
+          <div className="flex items-center justify-between gap-2 mb-3">
             <button
               type="button"
-              id={menuButtonId}
-              ref={menuButtonRef}
-              aria-label="Sınav seçenekleri"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              aria-controls={menuOpen ? menuId : undefined}
-              onClick={() => setMenuOpen((prev) => !prev)}
-              onKeyDown={handleMenuButtonKeyDown}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-thy-red"
+              onClick={() => router.push('/dashboard')}
+              className="inline-flex items-center gap-2 text-sm text-thy-red hover:text-thy-darkRed transition"
+              aria-label="Dashboard'a dön"
             >
-              <MoreVertical className="h-5 w-5" aria-hidden="true" />
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
             </button>
-            {menuOpen && (
-              <div
-                ref={menuRef}
-                id={menuId}
-                role="menu"
-                aria-labelledby={menuButtonId}
-                tabIndex={-1}
-                onKeyDown={handleMenuKeyDown}
-                className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Clock className="h-4 w-4" />
+              <span>Soru {progressLabel}</span>
+            </div>
+            <div className="relative">
+              <button
+                type="button"
+                id={menuButtonId}
+                ref={menuButtonRef}
+                aria-label="Sınav seçenekleri"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuOpen ? menuId : undefined}
+                onClick={() => setMenuOpen((prev) => !prev)}
+                onKeyDown={handleMenuButtonKeyDown}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-thy-red"
               >
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-menu-item="true"
-                  aria-disabled="true"
-                  disabled
+                <MoreVertical className="h-5 w-5" aria-hidden="true" />
+              </button>
+              {menuOpen && (
+                <div
+                  ref={menuRef}
+                  id={menuId}
+                  role="menu"
+                  aria-labelledby={menuButtonId}
                   tabIndex={-1}
-                  className="w-full cursor-not-allowed px-4 py-2 text-left text-sm text-gray-400"
-                  title="Yakında"
+                  onKeyDown={handleMenuKeyDown}
+                  className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
                 >
-                  Sınavı Duraklat (yakında)
-                </button>
-                <div className="my-1 border-t border-gray-100" aria-hidden="true" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-menu-item="true"
-                  className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setShowExitModal(true);
-                  }}
-                >
-                  Sınavdan Çık
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-3xl bg-white p-8 shadow-lg">
-          <div className="mb-6">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-              <span className="font-medium">
-                Soru {progressLabel}
-              </span>
-              <span>%{Math.round(progressPercent)} tamamlandı</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-gray-200">
-              <div
-                className="h-full rounded-full bg-thy-red transition-[width]"
-                style={{ width: `${progressPercent}%` }}
-                aria-hidden="true"
-              />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-menu-item="true"
+                    aria-disabled="true"
+                    disabled
+                    tabIndex={-1}
+                    className="w-full cursor-not-allowed px-4 py-2 text-left text-sm text-gray-400"
+                    title="Yakında"
+                  >
+                    Sınavı Duraklat (yakında)
+                  </button>
+                  <div className="my-1 border-t border-gray-100" aria-hidden="true" />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-menu-item="true"
+                    className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setShowExitModal(true);
+                    }}
+                  >
+                    Sınavdan Çık
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-full bg-thy-red px-4 py-1 text-sm font-semibold text-white">
-              Soru {question.question_number}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Mic className="h-4 w-4" />
-              Konuşma
-            </div>
+          {/* Progress bar */}
+          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+            <span className="font-medium">Soru {progressLabel}</span>
+            <span>%{Math.round(progressPercent)} tamamlandı</span>
           </div>
-
-          <h2 className="text-2xl font-semibold text-gray-900">{question.question_text}</h2>
-          {question.question_context && (
-            <div className="mt-4 rounded-xl border-l-4 border-thy-red bg-red-50 p-4 text-sm text-gray-700">
-              <strong>Senaryo:</strong> {question.question_context}
-            </div>
-          )}
-
-          <div className="mt-8">
-            <ExamAudioRecorder
-              onRecordingComplete={(blob) => setRecordedBlob(blob)}
-              maxDuration={EXAM_CONSTANTS.MAX_RECORDING_TIME_SECONDS}
-              disabled={isSubmitting}
+          <div className="h-2 w-full rounded-full bg-gray-200">
+            <div
+              className="h-full rounded-full bg-thy-red transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+              aria-hidden="true"
             />
           </div>
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              onClick={handleSubmitAnswer}
-              disabled={!recordedBlob || isSubmitting}
-              className="inline-flex items-center justify-center rounded-xl bg-thy-red px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-thy-darkRed disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Değerlendiriliyor...
-                </>
-              ) : (
-                'Cevabı Gönder'
-              )}
-            </button>
-            <p className="text-xs text-gray-500">
-              Kaydı gönderdiğinizde AI değerlendirmesi otomatik olarak yapılır.
-            </p>
-          </div>
         </div>
+      </header>
 
-        {lastResult && (
-          <div className="rounded-3xl border border-green-100 bg-green-50 p-6">
-            <div className="mb-4 flex items-center gap-2 text-green-700">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold">Sonuçlar</span>
-            </div>
-            <p className="text-3xl font-bold text-green-700">{lastResult.scoring.overall}/100</p>
-            <p className="mt-2 text-sm text-gray-700">{lastResult.scoring.feedback}</p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">Güçlü Yönler</p>
-                <ul className="mt-2 list-inside list-disc text-sm text-gray-700">
-                  {lastResult.scoring.strengths.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">Gelişim Alanları</p>
-                <ul className="mt-2 list-inside list-disc text-sm text-gray-700">
-                  {lastResult.scoring.improvements.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* NEW: Chat Container with conversation history */}
+      <ChatContainer messages={messages} isLoading={isSubmitting}>
+        {messages.map(renderMessage)}
+      </ChatContainer>
 
+      {/* NEW: Recorder Footer (replaces ExamAudioRecorder) */}
+      <RecorderFooter
+        onSubmit={handleRecorderSubmit}
+        disabled={isSubmitting}
+      />
+
+      {/* Exit Modal */}
       {showExitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div
@@ -612,7 +646,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
                 className="flex-1 rounded-xl bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-thy-red"
                 onClick={handleExitExam}
               >
-                Evet, Ã‡Ä±k
+                Evet, Çık
               </button>
             </div>
           </div>
