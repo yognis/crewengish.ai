@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
@@ -11,6 +12,7 @@ import {
   Clock,
   Mic,
   X,
+  MoreVertical,
 } from 'lucide-react';
 
 import { createClient } from '@/lib/auth-client';
@@ -61,7 +63,18 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState<SubmissionResult | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const exitCancelButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const closeExitModal = useCallback(() => {
+    setShowExitModal(false);
+    requestAnimationFrame(() => {
+      menuButtonRef.current?.focus();
+    });
+  }, []);
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
@@ -69,6 +82,47 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   useEffect(() => {
     fetchSessionState();
   }, [params.sessionId]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (
+        !target ||
+        menuRef.current?.contains(target) ||
+        menuButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setMenuOpen(false);
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('touchstart', handlePointer);
+    document.addEventListener('keydown', handleKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('touchstart', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const firstItem = menuRef.current?.querySelector<HTMLButtonElement>(
+      '[data-menu-item="true"]:not([disabled])'
+    );
+    firstItem?.focus();
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!session || session.status !== 'in_progress') return;
@@ -80,6 +134,24 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, [session]);
+
+  useEffect(() => {
+    if (!showExitModal) return;
+    const frame = requestAnimationFrame(() => {
+      exitCancelButtonRef.current?.focus();
+    });
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeExitModal();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showExitModal, closeExitModal]);
 
   const fetchSessionState = async () => {
     setLoadingSession(true);
@@ -157,6 +229,69 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     return result;
   };
 
+  const menuButtonId = 'exam-options-button';
+  const menuId = 'exam-options-menu';
+
+  const handleMenuKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (!menuRef.current) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        setMenuOpen(false);
+        return;
+      }
+
+      const items = Array.from(
+        menuRef.current.querySelectorAll<HTMLButtonElement>('[data-menu-item="true"]')
+      );
+      const enabledItems = items.filter((item) => !item.disabled);
+
+      if (enabledItems.length === 0) return;
+
+      const currentIndex = enabledItems.findIndex(
+        (item) => item === document.activeElement
+      );
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextItem = enabledItems[(currentIndex + 1) % enabledItems.length];
+        nextItem?.focus();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        const previousIndex =
+          currentIndex <= 0 ? enabledItems.length - 1 : currentIndex - 1;
+        enabledItems[previousIndex]?.focus();
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        enabledItems[0]?.focus();
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        enabledItems[enabledItems.length - 1]?.focus();
+      }
+    },
+    []
+  );
+
+  const handleMenuButtonKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        setMenuOpen(true);
+      } else if (event.key === 'Escape' && menuOpen) {
+        event.preventDefault();
+        setMenuOpen(false);
+      }
+    },
+    [menuOpen]
+  );
+
   const handleSubmitAnswer = async () => {
     if (!session || !question || !recordedBlob) {
       toast.error('Önce yanıtınızı kaydedin.');
@@ -228,6 +363,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
   const handleExitExam = async () => {
     if (!session) return;
+    setShowExitModal(false);
     try {
       await invokeExamFunction({
         action: 'EXIT_EXAM',
@@ -263,8 +399,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <button
+            type="button"
             onClick={() => router.push('/dashboard')}
             className="inline-flex items-center gap-2 text-sm text-thy-red"
           >
@@ -277,12 +414,59 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
               Soru {progressLabel}
             </span>
           </div>
-          <button
-            onClick={() => setShowExitModal(true)}
-            className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-          >
-            Sınavdan Çık
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              id={menuButtonId}
+              ref={menuButtonRef}
+              aria-label="Sınav seçenekleri"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-controls={menuOpen ? menuId : undefined}
+              onClick={() => setMenuOpen((prev) => !prev)}
+              onKeyDown={handleMenuButtonKeyDown}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-thy-red"
+            >
+              <MoreVertical className="h-5 w-5" aria-hidden="true" />
+            </button>
+            {menuOpen && (
+              <div
+                ref={menuRef}
+                id={menuId}
+                role="menu"
+                aria-labelledby={menuButtonId}
+                tabIndex={-1}
+                onKeyDown={handleMenuKeyDown}
+                className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-menu-item="true"
+                  aria-disabled="true"
+                  disabled
+                  tabIndex={-1}
+                  className="w-full cursor-not-allowed px-4 py-2 text-left text-sm text-gray-400"
+                  title="Yakında"
+                >
+                  Sınavı Duraklat (yakında)
+                </button>
+                <div className="my-1 border-t border-gray-100" aria-hidden="true" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-menu-item="true"
+                  className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setShowExitModal(true);
+                  }}
+                >
+                  Sınavdan Çık
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="rounded-3xl bg-white p-8 shadow-lg">
@@ -380,36 +564,51 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
 
       {showExitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div
+            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exit-exam-title"
+            aria-describedby="exit-exam-description"
+          >
+            <button
+              type="button"
+              className="absolute right-4 top-4 rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-thy-red"
+              onClick={closeExitModal}
+              aria-label="Pencereyi kapat"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+
             <div className="mb-4 flex items-center gap-3 text-red-600">
-              <AlertTriangle className="h-6 w-6" />
-              <h3 className="text-lg font-semibold">Sınavdan çıkmak üzeresiniz</h3>
+              <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+              <h3 id="exit-exam-title" className="text-lg font-semibold">
+                Sınavdan çıkmak istediğinizden emin misiniz?
+              </h3>
             </div>
-            <p className="text-sm text-gray-600">
-              0 soru cevaplandıysa kredi iade edilir. 1+ soru cevaplandıysa kredi iadesi yapılmaz.
+            <p id="exit-exam-description" className="text-sm text-gray-600">
+              İlerlemeniz kaydedilecek ancak kredi iade edilmeyecek.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
-                className="flex-1 rounded-xl border border-gray-200 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50"
-                onClick={() => setShowExitModal(false)}
+                type="button"
+                ref={exitCancelButtonRef}
+                className="flex-1 rounded-xl border border-gray-200 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-thy-red"
+                onClick={closeExitModal}
               >
-                Devam Et
+                Vazgeç
               </button>
               <button
-                className="flex-1 rounded-xl bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"
+                type="button"
+                className="flex-1 rounded-xl bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-thy-red"
                 onClick={handleExitExam}
               >
-                Sınavdan Çık
+                Evet, Çık
               </button>
             </div>
           </div>
-          <button
-            className="absolute right-6 top-6 rounded-full bg-white/80 p-2 text-gray-600 hover:bg-white"
-            onClick={() => setShowExitModal(false)}
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
+      )}
       )}
     </div>
   );
