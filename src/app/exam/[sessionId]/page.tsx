@@ -514,12 +514,12 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
           <div className="flex items-center justify-between gap-2 mb-3">
             <button
               type="button"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => setShowExitModal(true)}
               className="inline-flex items-center gap-2 text-sm text-thy-red hover:text-thy-darkRed transition"
-              aria-label="Dashboard'a dön"
+              aria-label="Ana Sayfa"
             >
               <ArrowLeft className="h-4 w-4" />
-              Dashboard
+              Ana Sayfa
             </button>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Clock className="h-4 w-4" />
