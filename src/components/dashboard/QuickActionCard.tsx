@@ -51,7 +51,7 @@ export function QuickActionCard({
 
       {/* Content */}
       <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 mb-6">{description}</p>
+      <p className="text-sm text-gray-600 mb-6 whitespace-pre-line">{description}</p>
 
       {/* Button */}
       <button

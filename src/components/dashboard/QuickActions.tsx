@@ -1,13 +1,29 @@
 'use client';
 
-import { PlayCircle, History, User } from 'lucide-react';
+import { PlayCircle, History, Users, User } from 'lucide-react';
 import { QuickActionCard } from './QuickActionCard';
+import { useTotalUsers, useTodayActiveUsers, formatUserCount } from '@/hooks/useTotalUsers';
 
 interface QuickActionsProps {
   totalTests: number;
 }
 
 export function QuickActions({ totalTests }: QuickActionsProps) {
+  const { totalUsers, loading: loadingTotal } = useTotalUsers();
+  const { activeToday, loading: loadingActive } = useTodayActiveUsers();
+
+  const loading = loadingTotal || loadingActive;
+
+  // Format the badge text
+  const userBadge = loading
+    ? '...'
+    : `${formatUserCount(totalUsers)} üye`;
+
+  // Format description with two lines - Seçenek 2 format
+  const communityDescription = loading
+    ? 'Yükleniyor...'
+    : `${formatUserCount(totalUsers)} üye topluluğumuzda\n🔥 ${formatUserCount(activeToday)} kişi bugün sınav yaptı`;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <QuickActionCard
@@ -21,12 +37,12 @@ export function QuickActions({ totalTests }: QuickActionsProps) {
       />
 
       <QuickActionCard
-        icon={<History className="h-6 w-6" />}
-        title="Sınav Geçmişim"
-        description="Geçmiş sınavlarını ve puanlarını gör"
-        buttonText="Geçmişi Gör"
-        href="/dashboard/history"
-        badge={`${totalTests} sınav`}
+        icon={<Users className="h-6 w-6" />}
+        title="Topluluk"
+        description={communityDescription}
+        buttonText="Katıl"
+        href="/exam/start"
+        badge={userBadge}
       />
 
       <QuickActionCard
