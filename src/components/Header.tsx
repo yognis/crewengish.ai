@@ -86,7 +86,7 @@ export default function Header() {
               </svg>
             </div>
             <span className="text-xl font-bold text-thy-gray">
-              THY <span className="text-thy-red">English Test</span>
+              Crew<span className="text-thy-red">English.ai</span>
             </span>
           </Link>
 

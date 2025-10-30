@@ -48,10 +48,10 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="mb-6 text-5xl font-bold text-white md:text-6xl lg:text-7xl"
             >
-              THY İngilizce Sınavına
+              İngilizcenizi AI ile
               <br />
               <span className="bg-gradient-to-r from-yellow-200 to-yellow-400 bg-clip-text text-transparent">
-                Hazırlanın
+                Geliştirin
               </span>
             </motion.h1>
 
@@ -131,11 +131,11 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold text-thy-gray lg:text-4xl">
-              Neden THY English Test?
+              Neden CrewEnglish.ai?
             </h2>
             <p className="mx-auto max-w-2xl text-gray-600">
-              CrewCoach.ai'nin kanıtlanmış modelini kullanarak, THY çalışanlarına özel
-              geliştirilmiş konuşma testi hazırlık platformu.
+              Havacılık profesyonelleri için AI-destekli İngilizce öğrenme platformu.
+              Anında geri bildirim alın, konuşma becerilerinizi geliştirin.
             </p>
           </div>
 
@@ -152,8 +152,8 @@ export default function HomePage() {
               </div>
               <h3 className="mb-2 text-xl font-semibold text-thy-gray">Gerçekçi Sınav Deneyimi</h3>
               <p className="text-gray-600">
-                THY dahili sınavlarına benzer sorular ve değerlendirme kriterleri ile gerçek sınav
-                ortamını simüle edin.
+                Havacılık sektörüne özel sorular ve değerlendirme kriterleri ile gerçek sınav
+                ortamını simüle edin. DLA sınavlarına hazırlık için ideal.
               </p>
             </motion.div>
 
@@ -186,7 +186,7 @@ export default function HomePage() {
               </div>
               <h3 className="mb-2 text-xl font-semibold text-thy-gray">En Güncel D.L.A Soruları</h3>
               <p className="text-gray-600">
-                THY&apos;nin en güncel İngilizce yeterlilik sınav sorularıyla pratik yapın. İçeriğimiz, gerçek D.L.A sorularıyla zenginleştirilir ve haftalık güncellenir.
+                Havacılık sektörünün en güncel İngilizce yeterlilik sınav sorularıyla pratik yapın. İçeriğimiz, gerçek DLA sorularıyla zenginleştirilir ve haftalık güncellenir.
               </p>
             </motion.div>
           </div>
@@ -257,10 +257,10 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <h2 className="mb-6 text-4xl font-bold lg:text-5xl">
-              THY İngilizce Sınavına Bugün Başlayın
+              CrewEnglish.ai ile Bugün Başlayın
             </h2>
             <p className="mb-8 text-xl text-white/90 leading-relaxed">
-              Binlerce THY çalışanının güvendiği platform ile kariyerinizi ilerletin.
+              Havacılık profesyonellerinin güvendiği AI-destekli platform ile kariyerinizi ilerletin.
               Şimdi kayıt olun, 3 ücretsiz sınav kazanın!
             </p>
             <Link

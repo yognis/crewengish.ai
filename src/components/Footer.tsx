@@ -50,7 +50,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="mailto:destek@thyenglishtest.com"
+                  href="mailto:destek@crewenglish.ai"
                   className="text-gray-400 transition-colors hover:text-thy-red"
                 >
                   Yardım Merkezi
@@ -58,7 +58,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:info@thyenglishtest.com"
+                  href="mailto:info@crewenglish.ai"
                   className="text-gray-400 transition-colors hover:text-thy-red"
                 >
                   İletişim
@@ -74,7 +74,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://status.thyenglishtest.com"
+                  href="https://status.crewenglish.ai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 transition-colors hover:text-thy-red"
@@ -118,7 +118,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="https://twitter.com/thyenglishtest"
+                  href="https://twitter.com/crewenglishai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-gray-400 transition-colors hover:text-thy-red"
@@ -129,7 +129,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://linkedin.com/company/thyenglishtest"
+                  href="https://linkedin.com/company/crewenglishai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-gray-400 transition-colors hover:text-thy-red"
@@ -140,7 +140,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://instagram.com/thyenglishtest"
+                  href="https://instagram.com/crewenglishai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-gray-400 transition-colors hover:text-thy-red"
@@ -151,7 +151,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:info@thyenglishtest.com"
+                  href="mailto:info@crewenglish.ai"
                   className="flex items-center gap-2 text-gray-400 transition-colors hover:text-thy-red"
                 >
                   <Mail className="h-4 w-4" />
@@ -169,7 +169,7 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           {/* Copyright */}
           <p className="text-sm text-gray-400">
-            © {currentYear} THY English Test. Tüm hakları saklıdır.
+            © {currentYear} CrewEnglish.ai. Tüm hakları saklıdır.
           </p>
 
           {/* Logo */}
@@ -178,7 +178,7 @@ export default function Footer() {
               <Plane className="h-4 w-4 text-white" />
             </div>
             <span className="text-sm font-semibold">
-              THY <span className="text-thy-red">English Test</span>
+              Crew<span className="text-thy-red">English.ai</span>
             </span>
           </div>
 
@@ -193,7 +193,7 @@ export default function Footer() {
         {/* Disclaimer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-500">
-            Bu platform Turkish Airlines tarafından değil, bağımsız geliştiriciler tarafından oluşturulmuştur.
+            CrewEnglish.ai, havacılık profesyonellerine yönelik bağımsız bir AI-destekli İngilizce öğrenme platformudur.
           </p>
         </div>
       </div>

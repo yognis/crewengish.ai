@@ -1,7 +1,7 @@
 {
-  "name": "dla-project",
+  "name": "crewenglish-ai",
   "version": "1.0.0",
-  "description": "DLA project with Tailwind CSS configuration",
+  "description": "CrewEnglish.ai - AI-Powered English Learning Platform for Aviation Professionals",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",

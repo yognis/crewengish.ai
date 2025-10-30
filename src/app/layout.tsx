@@ -6,9 +6,9 @@ import { Toaster } from 'react-hot-toast';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'THY English Speaking Test - Practice & Improve',
-  description: 'Turkish Airlines employee English speaking test simulator. Practice aviation English and ace your internal proficiency exams.',
-  keywords: 'THY, Turkish Airlines, English test, aviation English, speaking practice',
+  title: 'CrewEnglish.ai - AI-Powered English Learning for Aviation',
+  description: 'AI-powered English learning platform for aviation professionals. Practice speaking, get instant feedback, and master aviation English with CrewEnglish.ai.',
+  keywords: 'CrewEnglish.ai, aviation English, AI English tutor, speaking practice, cabin crew English, pilot English',
 };
 
 export default function RootLayout({

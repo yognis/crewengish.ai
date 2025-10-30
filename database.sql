@@ -1,4 +1,5 @@
--- THY English Speaking Test Simulator Database Schema
+-- CrewEnglish.ai Database Schema
+-- AI-Powered English Learning Platform for Aviation Professionals
 -- Run this in your Supabase SQL Editor
 
 -- Enable UUID extension

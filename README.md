@@ -1,6 +1,6 @@
-# THY English Speaking Test Simulator
+# CrewEnglish.ai
 
-A rapid-prototyped speaking test preparation platform for Turkish Airlines employees, built using the proven business model from CrewCoach.ai.
+An AI-powered English learning platform for aviation professionals, designed to help cabin crew, pilots, and ground staff master English through conversational practice and instant feedback.
 
 ## 🚀 Tech Stack
 
@@ -45,7 +45,7 @@ A rapid-prototyped speaking test preparation platform for Turkish Airlines emplo
 ### 1. Clone and Install
 
 ```bash
-cd thy-speaking-test
+cd crewenglish-ai
 npm install
 ```
 
@@ -99,7 +99,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 ## 📁 Project Structure
 
 ```
-thy-speaking-test/
+crewenglish-ai/
 ├── app/
 │   ├── api/
 │   │   ├── transcribe/route.ts    # OpenAI Whisper speech-to-text
@@ -158,14 +158,14 @@ Current configuration in `/api/transcribe/route.ts`:
 - Response format: `json`
 - Audio format: WebM/Opus (16kHz sample rate)
 
-**For Turkish-accented English**, OpenAI's Whisper model performs exceptionally well with multi-accent recognition. The model is specifically trained to handle non-native English speakers and performs well with aviation terminology out of the box.
+**For multilingual and accented English**, OpenAI's Whisper model performs exceptionally well with multi-accent recognition. The model is specifically trained to handle non-native English speakers and performs well with aviation terminology out of the box.
 
 ### OpenAI GPT-4 Evaluation
 Current configuration in `/api/evaluate/route.ts`:
 - Model: `gpt-4o`
 - Temperature: `0.3` (consistent scoring)
 - JSON response format
-- Feedback in Turkish
+- Feedback in Turkish (customizable for other languages)
 
 ### Credit System
 - New users: 3 free credits (welcome bonus)
@@ -196,7 +196,7 @@ Settings → Environment Variables
 ## 🎨 Design System
 
 ### Colors
-- **THY Red**: `#E30A17` (primary brand)
+- **Primary Red**: `#E30A17` (primary brand)
 - **Dark Red**: `#B80813` (hover states)
 - **Gray**: `#4A4A4A` (text)
 - **Light Gray**: `#F5F5F5` (backgrounds)
@@ -254,7 +254,7 @@ This is a rapid prototype. Priority is shipping fast and iterating based on user
 
 ## 📝 License
 
-Proprietary - Turkish Airlines Employee Use Only
+MIT License - Open for aviation professionals worldwide
 
 ---
 
