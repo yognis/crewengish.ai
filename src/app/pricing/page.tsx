@@ -5,8 +5,51 @@ import Footer from '@/components/Footer';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Check } from 'lucide-react';
 
+// Pricing tiers configuration (modular for easy expansion)
+const PRICING_TIERS = [
+  {
+    id: 'standard',
+    name: 'Standart',
+    credits: 3,
+    price: 200,
+    currency: 'TRY',
+    popular: false,
+    singlePrice: true,
+    features: [
+      '3 tam test',
+      'Detaylı AI geri bildirim',
+      'İlerleme takibi',
+    ],
+    buttonText: 'Satın Al',
+    highlighted: true,
+  },
+  // Future tiers can be added here easily:
+  // {
+  //   id: 'pro',
+  //   name: 'Pro',
+  //   credits: 10,
+  //   price: 350,
+  //   currency: 'TRY',
+  //   savings: 15,
+  //   features: [
+  //     '10 tam test',
+  //     'Detaylı AI geri bildirim',
+  //     'İlerleme takibi',
+  //     '%15 tasarruf'
+  //   ],
+  //   buttonText: 'Satın Al',
+  //   highlighted: false,
+  // },
+];
+
 export default function PricingPage() {
   const router = useRouter();
+
+  const handlePurchase = (tierId: string) => {
+    // TODO: Integrate with Stripe
+    console.log('Purchase initiated for tier:', tierId);
+    alert('Stripe entegrasyonu yakında eklenecek!');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,102 +65,60 @@ export default function PricingPage() {
         </button>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Kredi Paketleri</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Kredi Satın Al</h1>
           <p className="text-lg text-gray-600">
-            İhtiyacınıza uygun paketi seçin ve İngilizce seviyenizi ölçmeye başlayın
+            İhtiyacınıza uygun kredi paketi ile İngilizce seviyenizi ölçmeye başlayın
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Starter Package */}
-          <div className="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-thy-red transition-all">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Başlangıç</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold text-gray-900">5</span>
-              <span className="text-gray-600 ml-2">kredi</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">5 tam test</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">Detaylı AI geri bildirim</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">İlerleme takibi</span>
-              </li>
-            </ul>
-            <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 rounded-lg transition-all">
-              Yakında
-            </button>
-          </div>
+        <div className="flex justify-center">
+          <div className="w-full max-w-sm">
+            {PRICING_TIERS.map((tier) => (
+              <div
+                key={tier.id}
+                className={`bg-white rounded-xl p-8 relative ${
+                  tier.highlighted
+                    ? 'border-2 border-thy-red shadow-xl'
+                    : 'border-2 border-gray-200 hover:border-thy-red transition-all'
+                }`}
+              >
+                {tier.singlePrice && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-thy-red text-white px-4 py-1 rounded-full text-sm font-semibold">
+                      Tek Fiyat
+                    </span>
+                  </div>
+                )}
 
-          {/* Popular Package */}
-          <div className="bg-white border-2 border-thy-red rounded-xl p-8 relative shadow-xl transform scale-105">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-thy-red text-white px-4 py-1 rounded-full text-sm font-semibold">
-                Popüler
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Standart</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold text-gray-900">15</span>
-              <span className="text-gray-600 ml-2">kredi</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">15 tam test</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">Detaylı AI geri bildirim</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">İlerleme takibi</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">%20 tasarruf</span>
-              </li>
-            </ul>
-            <button className="w-full bg-thy-red hover:bg-thy-darkRed text-white font-semibold py-3 rounded-lg transition-all">
-              Yakında
-            </button>
-          </div>
-
-          {/* Pro Package */}
-          <div className="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-thy-red transition-all">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Profesyonel</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold text-gray-900">30</span>
-              <span className="text-gray-600 ml-2">kredi</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">30 tam test</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">Detaylı AI geri bildirim</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">İlerleme takibi</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
-                <span className="text-gray-600">%30 tasarruf</span>
-              </li>
-            </ul>
-            <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 rounded-lg transition-all">
-              Yakında
-            </button>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">{tier.credits}</span>
+                  <span className="text-gray-600 ml-2">kredi</span>
+                </div>
+                <div className="mb-6">
+                  <span className="text-3xl font-bold text-gray-900">{tier.price}</span>
+                  <span className="text-gray-600 ml-2">{tier.currency}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {tier.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <Check className="h-5 w-5 text-green-600" />
+                      <span className="text-gray-600">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handlePurchase(tier.id)}
+                  className={`w-full font-semibold py-3 rounded-lg transition-all ${
+                    tier.highlighted
+                      ? 'bg-thy-red hover:bg-thy-darkRed text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                  }`}
+                >
+                  {tier.buttonText}
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 

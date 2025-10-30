@@ -11,7 +11,7 @@ const faqs = [
   },
   {
     question: 'Testler ne kadar sürer?',
-    answer: 'Her test 5 soru içerir ve ortalama 10-15 dakika sürer.',
+    answer: 'Her test 20 soru içerir ve ortalama 30-40 dakika sürer.',
   },
   {
     question: 'AI puanlama nasıl çalışır?',

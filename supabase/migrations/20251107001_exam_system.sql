@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.exam_sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   status public.exam_session_status NOT NULL DEFAULT 'pending',
-  total_questions INT NOT NULL DEFAULT 5 CHECK (total_questions BETWEEN 1 AND 50),
+  total_questions INT NOT NULL DEFAULT 20 CHECK (total_questions BETWEEN 1 AND 50),
   current_question_number INT NOT NULL DEFAULT 0 CHECK (current_question_number >= 0),
   overall_score NUMERIC(5,2),
   credits_charged INT NOT NULL DEFAULT 1 CHECK (credits_charged >= 0),

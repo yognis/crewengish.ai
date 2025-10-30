@@ -61,7 +61,7 @@ CREATE TABLE exam_sessions (
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   status TEXT CHECK (status IN ('pending', 'in_progress', 'completed', 'exited')) DEFAULT 'pending',
   current_question_number INTEGER DEFAULT 0,
-  total_questions INTEGER DEFAULT 5,
+  total_questions INTEGER DEFAULT 20,
   overall_score DECIMAL(5,2) CHECK (overall_score >= 0 AND overall_score <= 100),
   fluency_score DECIMAL(5,2) CHECK (fluency_score >= 0 AND fluency_score <= 100),
   grammar_score DECIMAL(5,2) CHECK (grammar_score >= 0 AND grammar_score <= 100),

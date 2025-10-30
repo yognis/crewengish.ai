@@ -273,7 +273,7 @@ const startExam = async () => {
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-gray-500">Konuşma Sınavı</p>
                 <h2 className="mt-2 text-3xl font-bold text-gray-900">Sınava Başla</h2>
-                <p className="mt-2 text-gray-600">5 sorudan oluşan konuşma sınavı</p>
+                <p className="mt-2 text-gray-600">20 sorudan oluşan konuşma sınavı</p>
               </div>
               <div className="rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-thy-red shadow-inner">
                 1 Kredi

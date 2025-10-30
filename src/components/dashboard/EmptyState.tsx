@@ -29,16 +29,16 @@ export function EmptyState() {
           <div className="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
             <Mic className="h-6 w-6 text-blue-600" />
           </div>
-          <h3 className="font-bold text-gray-900 mb-2">🎙️ 5 Soru</h3>
-          <p className="text-sm text-gray-600">Gerçek sınav simülasyonu</p>
+          <h3 className="font-bold text-gray-900 mb-2">🎙️ 20 Soru</h3>
+          <p className="text-sm text-gray-600">Kapsamlı sınav simülasyonu</p>
         </div>
 
         <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
           <div className="bg-green-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
             <Clock className="h-6 w-6 text-green-600" />
           </div>
-          <h3 className="font-bold text-gray-900 mb-2">⏱️ 10-15 Dakika</h3>
-          <p className="text-sm text-gray-600">Hızlı ve kolay</p>
+          <h3 className="font-bold text-gray-900 mb-2">⏱️ 30-40 Dakika</h3>
+          <p className="text-sm text-gray-600">Detaylı değerlendirme</p>
         </div>
 
         <div className="bg-white p-6 rounded-lg border-2 border-gray-200">

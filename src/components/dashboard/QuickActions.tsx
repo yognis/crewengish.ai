@@ -29,7 +29,7 @@ export function QuickActions({ totalTests }: QuickActionsProps) {
       <QuickActionCard
         icon={<PlayCircle className="h-6 w-6" />}
         title="Yeni Sınav Başlat"
-        description="5 soruyla İngilizce seviyeni ölç"
+        description="20 soruyla İngilizce seviyeni ölç"
         buttonText="Sınava Başla"
         href="/exam/start"
         badge="1 kredi"
@@ -41,8 +41,7 @@ export function QuickActions({ totalTests }: QuickActionsProps) {
         title="Topluluk"
         description={communityDescription}
         buttonText="Katıl"
-        href="/exam/start"
-        badge={userBadge}
+        href="/topluluk"
       />
 
       <QuickActionCard
