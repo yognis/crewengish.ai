@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getServerBaseUrl } from '@/lib/utils/get-base-url';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+
+  // Get proper base URL (replaces 0.0.0.0 with localhost)
+  const baseUrl = getServerBaseUrl(request.url);
 
   if (code) {
     const supabase = await createClient();
@@ -11,13 +15,16 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Auth callback error:', error);
-      return NextResponse.redirect(new URL('/auth/login?error=verification_failed', request.url));
+      console.log('[Callback] Redirecting to:', `${baseUrl}/auth/login?error=verification_failed`);
+      return NextResponse.redirect(new URL('/auth/login?error=verification_failed', baseUrl));
     }
 
     // Successfully verified - redirect to dashboard
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    console.log('[Callback] Success! Redirecting to:', `${baseUrl}/dashboard`);
+    return NextResponse.redirect(new URL('/dashboard', baseUrl));
   }
 
   // No code provided - redirect to login
-  return NextResponse.redirect(new URL('/auth/login', request.url));
+  console.log('[Callback] No code, redirecting to:', `${baseUrl}/auth/login`);
+  return NextResponse.redirect(new URL('/auth/login', baseUrl));
 }

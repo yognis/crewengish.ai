@@ -44,12 +44,12 @@ export default function LoginClient() {
       });
 
       if (error) {
-        if (error.message.includes('Email not confirmed')) {
+        if (error.message?.includes('Email not confirmed')) {
           toast.error('Lütfen önce email adresinizi doğrulayın!');
-        } else if (error.message.includes('Invalid login credentials')) {
+        } else if (error.message?.includes('Invalid login credentials')) {
           toast.error('Email veya şifre hatalı!');
         } else {
-          toast.error(error.message);
+          toast.error(error.message || 'Giriş başarısız');
         }
         return;
       }
@@ -150,6 +150,15 @@ export default function LoginClient() {
                 </>
               )}
             </button>
+
+            <div className="mt-4 text-right">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-thy-red hover:text-thy-darkRed font-medium transition-colors"
+              >
+                Şifrenizi mi unuttunuz?
+              </Link>
+            </div>
           </form>
 
           <div className="mt-6 text-center">

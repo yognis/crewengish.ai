@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
+import { getAuthCallbackUrl } from '@/lib/utils/get-base-url';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -108,16 +109,33 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
+      const emailRedirectTo = getAuthCallbackUrl();
+      console.log('[Signup] Starting signup...');
+      console.log('[Signup] Email:', email);
+      console.log('[Signup] emailRedirectTo:', emailRedirectTo);
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: { full_name: fullName, phone },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          options: {
+            data: { full_name: fullName, phone },
+            emailRedirectTo,
         },
       });
 
-      if (authError) throw authError;
+      console.log('[Signup] Response data:', authData);
+      console.log('[Signup] User created:', authData?.user ? 'Yes' : 'No');
+      console.log('[Signup] Email sent:', authData?.user ? 'Should be sent' : 'Unknown');
+
+      if (authError) {
+        console.error('[Signup] Error details:', {
+          message: authError.message,
+          status: authError.status,
+          name: authError.name,
+          full: authError
+        });
+        throw authError;
+      }
 
       if (authData.user) {
         const profileResponse = await fetch('/api/profiles', {

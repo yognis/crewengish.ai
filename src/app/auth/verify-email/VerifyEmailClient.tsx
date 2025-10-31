@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { createClient } from '@/lib/supabase/client';
+import { getAuthCallbackUrl } from '@/lib/utils/get-base-url';
 import {
   Mail,
   ArrowLeft,
@@ -33,20 +34,50 @@ export default function VerifyEmailClient() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.resend({
+      const emailRedirectTo = getAuthCallbackUrl();
+      
+      console.log('[Resend Email] Starting resend...');
+      console.log('[Resend Email] Email:', email);
+      console.log('[Resend Email] emailRedirectTo:', emailRedirectTo);
+      console.log('[Resend Email] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      
+      const { data, error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
+        options: {
+          emailRedirectTo,
+        },
       });
 
+      console.log('[Resend Email] Response data:', data);
+      
       if (error) {
-        toast.error('Email gönderilemedi. Lütfen tekrar deneyin.');
-        console.error('Resend error:', error);
+        console.error('[Resend Email] Error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          full: error
+        });
+        
+        // More specific error messages
+        if (error.message?.includes('rate limit') || error.message?.includes('too many')) {
+          toast.error('Çok fazla istek gönderildi. Lütfen birkaç dakika sonra tekrar deneyin.');
+        } else if (error.message?.includes('not found') || error.message?.includes('user')) {
+          toast.error('Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı. Lütfen önce kayıt olun.');
+        } else if (error.message?.includes('email')) {
+          toast.error(`Email hatası: ${error.message}`);
+        } else {
+          toast.error(`Email gönderilemedi: ${error.message || 'Bilinmeyen hata'}`);
+        }
       } else {
-        toast.success('Doğrulama emaili tekrar gönderildi!');
+        console.log('[Resend Email] Success! Email should be sent.');
+        toast.success('Doğrulama emaili tekrar gönderildi! Lütfen e-posta kutunuzu kontrol edin.');
       }
-    } catch (error) {
-      console.error('Resend error:', error);
-      toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
+    } catch (error: any) {
+      console.error('[Resend Email] Exception caught:', error);
+      console.error('[Resend Email] Error type:', typeof error);
+      console.error('[Resend Email] Error stack:', error?.stack);
+      toast.error(`Bir hata oluştu: ${error?.message || 'Bilinmeyen hata'}`);
     } finally {
       setResending(false);
     }
