@@ -116,7 +116,7 @@ function ScoreCard({
             Transkript
           </summary>
           <blockquote className="mt-2 border-l-2 border-gray-300 pl-4 text-sm italic text-gray-600" role="blockquote">
-            "{transcript}"
+            &quot;{transcript}&quot;
           </blockquote>
         </details>
       </div>
