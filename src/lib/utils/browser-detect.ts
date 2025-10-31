@@ -72,7 +72,7 @@ export function logBrowserInfo() {
     isSamsung: info.isSamsung,
     hasStorageIssues: info.hasStorageIssues,
     recommendOTPFlow: info.recommendOTPFlow,
-    userAgent: info.userAgent.substring(0, 100) + '...',
+    userAgent: info.userAgent ? info.userAgent.substring(0, 100) + '...' : 'unknown',
   });
 
   if (info.isSamsung) {
