@@ -110,9 +110,12 @@ export default function SignupPage() {
 
     try {
       const emailRedirectTo = getAuthCallbackUrl();
-      console.log('[Signup] Starting signup...');
-      console.log('[Signup] Email:', email);
-      console.log('[Signup] emailRedirectTo:', emailRedirectTo);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Signup] Starting signup...');
+        console.log('[Signup] Email:', email);
+        console.log('[Signup] emailRedirectTo:', emailRedirectTo);
+      }
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -123,9 +126,11 @@ export default function SignupPage() {
         },
       });
 
-      console.log('[Signup] Response data:', authData);
-      console.log('[Signup] User created:', authData?.user ? 'Yes' : 'No');
-      console.log('[Signup] Email sent:', authData?.user ? 'Should be sent' : 'Unknown');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Signup] Response data:', authData);
+        console.log('[Signup] User created:', authData?.user ? 'Yes' : 'No');
+        console.log('[Signup] Email sent:', authData?.user ? 'Should be sent' : 'Unknown');
+      }
 
       if (authError) {
         console.error('[Signup] Error details:', {

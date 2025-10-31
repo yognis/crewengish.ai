@@ -198,7 +198,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         );
 
         if (alreadyExists) {
-          console.log('[ExamPage] Question already in messages, skipping');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[ExamPage] Question already in messages, skipping');
+          }
           return prev;
         }
 
@@ -334,7 +336,9 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   const handleRecorderSubmit = useCallback(async (audioBlob: Blob) => {
     if (!session || !question || isSubmitting) {
       if (isSubmitting) {
-        console.log('[ExamPage] Already submitting, ignoring duplicate call');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[ExamPage] Already submitting, ignoring duplicate call');
+        }
       }
       return;
     }

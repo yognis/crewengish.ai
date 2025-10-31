@@ -107,7 +107,9 @@ export default function ExamStartPage() {
   };
 
 const startExam = async () => {
-    console.log('━━━ STARTING NEW EXAM ━━━');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('━━━ STARTING NEW EXAM ━━━');
+    }
     if (!hasCredits) {
       toast.error('Sınav başlatmak için yeterli krediniz yok.');
       console.warn('[StartExam] Not enough credits');
@@ -149,7 +151,9 @@ const startExam = async () => {
         headers.Authorization = `Bearer ${session.access_token}`;
       }
 
-      console.log('[StartExam] Calling exam-chat edge function...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[StartExam] Calling exam-chat edge function...');
+      }
       const response = await fetch(`${SUPABASE_URL}/functions/v1/exam-chat`, {
         method: 'POST',
         headers,
@@ -174,13 +178,21 @@ const startExam = async () => {
         throw new Error(message);
       }
 
-      console.log('[StartExam] Response:', result);
-      console.log('[StartExam] Session ID:', result?.sessionId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[StartExam] Response:', result);
+        console.log('[StartExam] Session ID:', result?.sessionId);
+      }
+      
       toast.success('Sınav başladı! Başarılar.');
+      
       if (result?.sessionId) {
-        console.log('[StartExam] Redirecting to exam page...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[StartExam] Redirecting to exam page...');
+        }
       } else {
-        console.warn('[StartExam] Missing sessionId in response');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[StartExam] Missing sessionId in response');
+        }
       }
       router.push(`/exam/${result.sessionId}`);
     } catch (error: any) {

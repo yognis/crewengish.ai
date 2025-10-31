@@ -36,7 +36,9 @@ export function useTotalUsers(): UseTotalUsersReturn {
           throw countError;
         }
 
-        console.log('Total users count:', count);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Total users count:', count);
+        }
         setTotalUsers(count ?? 0);
       } catch (err) {
         console.error('Error fetching total users:', err);
@@ -119,7 +121,9 @@ export function useTodayActiveUsers() {
           throw countError;
         }
 
-        console.log('Active users today:', count);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Active users today:', count);
+        }
         setActiveToday(count ?? 0);
       } catch (err) {
         console.error('Error fetching today active users:', err);

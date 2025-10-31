@@ -95,7 +95,9 @@ function VerifyOTPContent() {
     setLoading(true);
 
     try {
-      console.log('Verifying OTP for email:', email);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Verifying OTP for email:', email);
+      }
 
       // Verify OTP
       const { data, error } = await supabase.auth.verifyOtp({
@@ -122,7 +124,9 @@ function VerifyOTPContent() {
       }
 
       if (data.session) {
-        console.log('OTP verified successfully');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('OTP verified successfully');
+        }
         toast.success('Kod doğrulandı! Yeni şifrenizi belirleyin.');
 
         // Navigate to password reset page

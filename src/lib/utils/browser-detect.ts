@@ -67,20 +67,22 @@ function checkStorageAccess(): boolean {
 export function logBrowserInfo() {
   const info = getBrowserInfo();
 
-  console.log('🌐 Browser Detection:', {
-    name: info.name,
-    isSamsung: info.isSamsung,
-    hasStorageIssues: info.hasStorageIssues,
-    recommendOTPFlow: info.recommendOTPFlow,
-    userAgent: info.userAgent ? info.userAgent.substring(0, 100) + '...' : 'unknown',
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🌐 Browser Detection:', {
+      name: info.name,
+      isSamsung: info.isSamsung,
+      hasStorageIssues: info.hasStorageIssues,
+      recommendOTPFlow: info.recommendOTPFlow,
+      userAgent: info.userAgent ? info.userAgent.substring(0, 100) + '...' : 'unknown',
+    });
 
-  if (info.isSamsung) {
-    console.warn('⚠️ Samsung browser detected - using enhanced auth flow');
-  }
+    if (info.isSamsung) {
+      console.warn('⚠️ Samsung browser detected - using enhanced auth flow');
+    }
 
-  if (info.hasStorageIssues) {
-    console.warn('⚠️ Browser has storage restrictions - PKCE flow may not work');
+    if (info.hasStorageIssues) {
+      console.warn('⚠️ Browser has storage restrictions - PKCE flow may not work');
+    }
   }
 
   return info;

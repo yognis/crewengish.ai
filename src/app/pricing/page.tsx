@@ -47,7 +47,9 @@ export default function PricingPage() {
 
   const handlePurchase = (tierId: string) => {
     // TODO: Integrate with Stripe
-    console.log('Purchase initiated for tier:', tierId);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Purchase initiated for tier:', tierId);
+    }
     alert('Stripe entegrasyonu yakında eklenecek!');
   };
 

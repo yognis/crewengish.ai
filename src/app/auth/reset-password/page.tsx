@@ -24,7 +24,9 @@ export default function ResetPasswordPage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
-        console.log('Reset password - Session check:', !!session);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Reset password - Session check:', !!session);
+        }
 
         if (session) {
           setHasSession(true);
@@ -67,7 +69,9 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      console.log('Updating password...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Updating password...');
+      }
 
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
@@ -75,7 +79,9 @@ export default function ResetPasswordPage() {
 
       if (updateError) throw updateError;
 
-      console.log('Password updated successfully');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Password updated successfully');
+      }
       toast.success('Şifreniz başarıyla güncellendi!');
 
       // Sign out and redirect to login

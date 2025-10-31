@@ -114,7 +114,9 @@ const mockMessages: AnyChatMessage[] = [
 export default function ChatTestPage() {
   const [messages] = useState<AnyChatMessage[]>(mockMessages);
   const handleRecorderSubmit = useCallback(async (audioBlob: Blob) => {
-    console.log("[ChatTest] Audio submitted:", audioBlob.size);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("[ChatTest] Audio submitted:", audioBlob.size);
+    }
   }, []);
 
   const renderMessage = (msg: ChatMessage) => {

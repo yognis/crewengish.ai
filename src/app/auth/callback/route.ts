@@ -15,16 +15,22 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Auth callback error:', error);
-      console.log('[Callback] Redirecting to:', `${baseUrl}/auth/login?error=verification_failed`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Callback] Redirecting to:', `${baseUrl}/auth/login?error=verification_failed`);
+      }
       return NextResponse.redirect(new URL('/auth/login?error=verification_failed', baseUrl));
     }
 
     // Successfully verified - redirect to dashboard
-    console.log('[Callback] Success! Redirecting to:', `${baseUrl}/dashboard`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Callback] Success! Redirecting to:', `${baseUrl}/dashboard`);
+    }
     return NextResponse.redirect(new URL('/dashboard', baseUrl));
   }
 
   // No code provided - redirect to login
-  console.log('[Callback] No code, redirecting to:', `${baseUrl}/auth/login`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Callback] No code, redirecting to:', `${baseUrl}/auth/login`);
+  }
   return NextResponse.redirect(new URL('/auth/login', baseUrl));
 }
