@@ -158,7 +158,7 @@ export default function CommunityPage() {
             className="flex items-center text-thy-red hover:text-thy-darkRed transition-colors font-semibold"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            <span>Dashboard'a Dön</span>
+            <span>Dashboard&apos;a Dön</span>
           </button>
         </div>
       </div>
@@ -290,7 +290,7 @@ export default function CommunityPage() {
               Sen de Katıl! 🚀
             </h2>
             <p className="text-gray-600 mb-6">
-              Havacılık kariyerin için İngilizce'ni geliştir. AI destekli sınavlarla
+              Havacılık kariyerin için İngilizce&apos;ni geliştir. AI destekli sınavlarla
               konuşma, dilbilgisi ve telaffuzunu ölç!
             </p>
 

@@ -110,7 +110,7 @@ export default function ExamResultsPage({ params }: { params: { sessionId: strin
           className="inline-flex items-center gap-2 text-sm text-thy-red"
         >
           <ArrowLeft className="h-4 w-4" />
-          Dashboard'a dön
+          Dashboard&apos;a dön
         </button>
 
         <section className="rounded-3xl bg-white p-8 shadow-xl">

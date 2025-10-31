@@ -638,7 +638,7 @@ export default function SignupPage() {
             <Link href="/privacy" className="underline hover:text-thy-red">
               Gizlilik Politikası
             </Link>
-            'nı kabul ediyorsunuz
+            &apos;nı kabul ediyorsunuz
           </div>
 
           {/* Mobile Features (show on mobile only) */}

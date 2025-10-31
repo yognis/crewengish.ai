@@ -121,7 +121,7 @@ export default function SocialProof() {
 
               {/* Text */}
               <p className="mb-6 text-gray-700 leading-relaxed">
-                "{testimonial.text}"
+                &quot;{testimonial.text}&quot;
               </p>
 
               {/* Author */}

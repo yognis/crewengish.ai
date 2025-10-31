@@ -276,7 +276,7 @@ const startExam = async () => {
           <div className="mb-6 lg:hidden">
             <Link href="/dashboard" className="flex items-center gap-2 text-thy-red font-medium">
               <ArrowLeft className="h-4 w-4" />
-              Dashboard'a dön
+              Dashboard&apos;a dön
             </Link>
           </div>
 
@@ -323,7 +323,7 @@ const startExam = async () => {
 
             {!micGranted && (
               <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-                Sınava başlamadan önce mikrofon izni vermelisiniz. "Sınava Başla" butonuna
+                Sınava başlamadan önce mikrofon izni vermelisiniz. &quot;Sınava Başla&quot; butonuna
                 tıkladığınızda izin isteyeceğiz.
               </div>
             )}
@@ -339,7 +339,7 @@ const startExam = async () => {
             <p className="mt-4 text-center text-sm text-gray-500">
               Geri dönmek için{' '}
               <Link href="/dashboard" className="font-medium text-thy-red hover:underline">
-                Dashboard'a dön
+                Dashboard&apos;a dön
               </Link>
             </p>
           </div>

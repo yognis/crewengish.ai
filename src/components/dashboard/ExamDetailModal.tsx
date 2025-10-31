@@ -202,7 +202,7 @@ export function ExamDetailModal({ sessionId, onClose }: ExamDetailModalProps) {
                           {response.transcript && (
                             <div className="bg-white border border-gray-200 rounded-lg p-3 mb-3">
                               <p className="text-xs font-medium text-gray-600 mb-1">Cevabınız:</p>
-                              <p className="text-sm text-gray-800 italic">"{response.transcript}"</p>
+                              <p className="text-sm text-gray-800 italic">&quot;{response.transcript}&quot;</p>
                             </div>
                           )}
 
