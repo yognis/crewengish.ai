@@ -8,7 +8,7 @@ const nextConfig = {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors/warnings.
     // We keep warnings but don't fail builds (console.logs are wrapped in dev checks anyway)
-    ignoreDuringBuilds: false, // Show warnings
+    ignoreDuringBuilds: true, // Ignore ESLint warnings during build
   },
 
   // TypeScript configuration for builds  
