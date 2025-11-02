@@ -18,6 +18,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 import { getAudioFileExtension } from '@/lib/audio';
+import { getSessionConfig, type SessionCategory } from '@/types/session-categories';
 
 // NEW: Chat architecture imports
 import ChatContainer from '@/components/exam/chat/ChatContainer';
@@ -33,9 +34,6 @@ import {
 } from '@/types/exam-chat';
 
 // Use process.env.NEXT_PUBLIC_* directly - Next.js inlines these at build time
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 interface SessionData {
   id: string;
   status: 'pending' | 'in_progress' | 'completed' | 'exited';
@@ -43,6 +41,9 @@ interface SessionData {
   current_question_number: number;
   overall_score: number | null;
   user_id: string;
+  session_category?: string | null;
+  session_number?: number | null;
+  category_display_name?: string | null;
 }
 
 interface QuestionData {
@@ -82,6 +83,8 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const exitCancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const questionRetryCountRef = useRef(0);
+  const questionRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const closeExitModal = useCallback(() => {
     setShowExitModal(false);
@@ -168,17 +171,33 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     };
   }, [showExitModal, closeExitModal]);
 
+  useEffect(() => {
+    return () => {
+      if (questionRetryTimeoutRef.current) {
+        clearTimeout(questionRetryTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const fetchSessionState = async () => {
     setLoadingSession(true);
     try {
       const { data: sessionData, error: sessionError } = await supabase
         .from('exam_sessions')
-        .select('id,status,total_questions,current_question_number,overall_score,user_id')
+        .select('id,status,total_questions,current_question_number,overall_score,user_id,session_category,session_number,category_display_name')
         .eq('id', params.sessionId)
-        .single();
-      if (sessionError || !sessionData) throw sessionError || new Error('Sınav bulunamadı');
+        .maybeSingle<SessionData>();
+      if (sessionError) {
+        throw sessionError;
+      }
 
-      setSession(sessionData as SessionData);
+      if (!sessionData) {
+        throw new Error('Sinav bulunamadi.');
+      }
+
+      setSession(sessionData);
+      questionRetryCountRef.current = 0;
+
 
       const targetQuestionNumber = sessionData.current_question_number || 1;
       const { data: questionData, error: questionError } = await supabase
@@ -186,10 +205,36 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
         .select('id,question_number,question_text,question_context')
         .eq('session_id', params.sessionId)
         .eq('question_number', targetQuestionNumber)
-        .single();
-      if (questionError || !questionData) throw questionError || new Error('Soru bulunamadı');
+        .maybeSingle<QuestionData>();
 
-      setQuestion(questionData as QuestionData);
+      if (questionError) {
+        throw questionError;
+      }
+
+      if (!questionData) {
+        if (questionRetryCountRef.current < 5) {
+          questionRetryCountRef.current += 1;
+          if (questionRetryTimeoutRef.current) {
+            clearTimeout(questionRetryTimeoutRef.current);
+          }
+          questionRetryTimeoutRef.current = setTimeout(fetchSessionState, 1000);
+          if (process.env.NODE_ENV === 'development') {
+            console.info('[ExamPage] Question not ready yet, retrying...', {
+              attempt: questionRetryCountRef.current,
+              sessionId: params.sessionId,
+            });
+          }
+          return;
+        }
+        throw new Error('Soru hazirlanirken gecikme oldu. Lutfen tekrar deneyin.');
+      }
+
+      questionRetryCountRef.current = 0;
+      if (questionRetryTimeoutRef.current) {
+        clearTimeout(questionRetryTimeoutRef.current);
+        questionRetryTimeoutRef.current = null;
+      }
+      setQuestion(questionData);
 
       // Only add question to messages if it's not already there
       setMessages((prev) => {
@@ -225,45 +270,25 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     }
   };
 
-  const invokeExamFunction = async (body: Record<string, unknown>) => {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Supabase yapılandırması eksik.');
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      apikey: SUPABASE_ANON_KEY,
-    };
-
-    if (session?.access_token) {
-      headers.Authorization = `Bearer ${session.access_token}`;
-    }
-
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/exam-chat`, {
+  const submitAnswer = async ({ sessionId, questionId, questionNumber, questionText, questionContext, audioUrl, transcript, duration, }: { sessionId: string; questionId: string; questionNumber: number; questionText: string; questionContext?: string | null; audioUrl: string; transcript: string; duration?: number; }) => {
+    const response = await fetch('/api/exam/process', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        questionId,
+        questionNumber,
+        questionText,
+        questionContext,
+        audioUrl,
+        transcript,
+        duration,
+      }),
     });
 
-    let result: any = null;
-    try {
-      result = await response.json();
-    } catch {
-      // Not JSON
-    }
-
-    if (!response.ok || result?.error) {
-      const error: any = new Error(
-        result?.error || `Edge function hatası (HTTP ${response.status}).`
-      );
-      error.status = response.status;
-      error.details = result?.details;
-      error.resetIn = result?.resetIn;
-      throw error;
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result?.error || 'Yanıt işlenemedi.');
     }
 
     return result;
@@ -356,11 +381,33 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
       const { data: urlData } = supabase.storage.from('test-recordings').getPublicUrl(filePath);
       const audioUrl = urlData?.publicUrl;
 
-      const result = await invokeExamFunction({
-        action: 'SUBMIT_ANSWER',
+      if (!audioUrl) {
+        throw new Error('Ses dosyası yüklenemedi.');
+      }
+
+      const transcriptionForm = new FormData();
+      transcriptionForm.append('file', audioBlob, `answer.${extension}`);
+
+      const transcriptionResponse = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: transcriptionForm,
+      });
+
+      const transcriptionResult = await transcriptionResponse.json();
+      if (!transcriptionResponse.ok || !transcriptionResult?.transcript) {
+        throw new Error(transcriptionResult?.error || 'Cevap metne dönüştürülemedi.');
+      }
+
+      const transcript: string = transcriptionResult.transcript;
+
+      const result = await submitAnswer({
         sessionId: session.id,
+        questionId: question.id,
         questionNumber: question.question_number,
+        questionText: question.question_text,
+        questionContext: question.question_context,
         audioUrl,
+        transcript,
       });
 
       // Simple pattern: Only add score message (which includes transcript)
@@ -428,7 +475,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
       setIsSubmitting(false);
     }
   }, [
-    invokeExamFunction,
+    submitAnswer,
     question,
     router,
     session,
@@ -440,10 +487,15 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     if (!session) return;
     setShowExitModal(false);
     try {
-      await invokeExamFunction({
-        action: 'EXIT_EXAM',
-        sessionId: session.id,
-      });
+      const { error } = await supabase
+        .from('exam_sessions')
+        .update({ status: 'exited', completed_at: new Date().toISOString() })
+        .eq('id', session.id);
+
+      if (error) {
+        throw error;
+      }
+
       toast.success('Sınavdan çıktınız.');
       router.push('/dashboard');
     } catch (error: any) {
@@ -502,13 +554,22 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
     );
   }
 
-  const totalQuestions = Math.max(session.total_questions || EXAM_CONSTANTS.MIN_QUESTIONS, EXAM_CONSTANTS.MIN_QUESTIONS);
+  const totalQuestions = Math.max(session.total_questions || 5, 5);
   const currentQuestionNumber = question.question_number;
   const progressLabel = `${currentQuestionNumber}/${totalQuestions}`;
   const progressPercent = Math.min(
     100,
     Math.max(0, (currentQuestionNumber / totalQuestions) * 100)
   );
+
+  // Get session info for display
+  const sessionConfig = session.session_category
+    ? getSessionConfig(session.session_category as SessionCategory)
+    : null;
+  const sessionTitle = session.category_display_name || sessionConfig?.title || 'Exam Session';
+  const sessionBadge = session.session_number
+    ? `Session ${session.session_number} of 5`
+    : 'Exam Session';
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -525,9 +586,16 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
               <ArrowLeft className="h-4 w-4" />
               Ana Sayfa
             </button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Clock className="h-4 w-4" />
-              <span>Soru {progressLabel}</span>
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              {session.session_number && (
+                <div className="rounded-full bg-thy-red/10 px-3 py-1 text-xs font-semibold text-thy-red">
+                  {sessionBadge}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>Soru {progressLabel}</span>
+              </div>
             </div>
             <div className="relative">
               <button

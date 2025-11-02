@@ -146,6 +146,9 @@ export interface Database {
           created_at: string;
           updated_at: string;
           idempotency_key: string | null;
+          session_category: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional' | null;
+          session_number: number | null;
+          category_display_name: string | null;
         };
         Insert: {
           id?: string;
@@ -161,6 +164,9 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           idempotency_key?: string | null;
+          session_category?: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional' | null;
+          session_number?: number | null;
+          category_display_name?: string | null;
         };
         Update: {
           status?: 'pending' | 'in_progress' | 'completed' | 'exited';
@@ -174,6 +180,9 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           idempotency_key?: string | null;
+          session_category?: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional' | null;
+          session_number?: number | null;
+          category_display_name?: string | null;
         };
         Relationships: [];
       };

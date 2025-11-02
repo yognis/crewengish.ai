@@ -111,12 +111,6 @@ export default function SignupPage() {
     try {
       const emailRedirectTo = getAuthCallbackUrl();
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Signup] Starting signup...');
-        console.log('[Signup] Email:', email);
-        console.log('[Signup] emailRedirectTo:', emailRedirectTo);
-      }
-      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -126,19 +120,7 @@ export default function SignupPage() {
         },
       });
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Signup] Response data:', authData);
-        console.log('[Signup] User created:', authData?.user ? 'Yes' : 'No');
-        console.log('[Signup] Email sent:', authData?.user ? 'Should be sent' : 'Unknown');
-      }
-
       if (authError) {
-        console.error('[Signup] Error details:', {
-          message: authError.message,
-          status: authError.status,
-          name: authError.name,
-          full: authError
-        });
         throw authError;
       }
 

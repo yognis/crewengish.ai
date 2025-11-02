@@ -37,10 +37,6 @@ export default function VerifyEmailClient() {
       const emailRedirectTo = getAuthCallbackUrl();
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Resend Email] Starting resend...');
-        console.log('[Resend Email] Email:', email);
-        console.log('[Resend Email] emailRedirectTo:', emailRedirectTo);
-        console.log('[Resend Email] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
       }
       
       const { data, error } = await supabase.auth.resend({
@@ -52,11 +48,10 @@ export default function VerifyEmailClient() {
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Resend Email] Response data:', data);
       }
       
       if (error) {
-        console.error('[Resend Email] Error details:', {
+        console.error('Email verification error:', {
           message: error.message,
           status: error.status,
           name: error.name,
@@ -75,14 +70,10 @@ export default function VerifyEmailClient() {
         }
       } else {
         if (process.env.NODE_ENV === 'development') {
-          console.log('[Resend Email] Success! Email should be sent.');
         }
         toast.success('Doğrulama emaili tekrar gönderildi! Lütfen e-posta kutunuzu kontrol edin.');
       }
     } catch (error: any) {
-      console.error('[Resend Email] Exception caught:', error);
-      console.error('[Resend Email] Error type:', typeof error);
-      console.error('[Resend Email] Error stack:', error?.stack);
       toast.error(`Bir hata oluştu: ${error?.message || 'Bilinmeyen hata'}`);
     } finally {
       setResending(false);

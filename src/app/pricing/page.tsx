@@ -23,23 +23,6 @@ const PRICING_TIERS = [
     buttonText: 'Satın Al',
     highlighted: true,
   },
-  // Future tiers can be added here easily:
-  // {
-  //   id: 'pro',
-  //   name: 'Pro',
-  //   credits: 10,
-  //   price: 350,
-  //   currency: 'TRY',
-  //   savings: 15,
-  //   features: [
-  //     '10 tam test',
-  //     'Detaylı AI geri bildirim',
-  //     'İlerleme takibi',
-  //     '%15 tasarruf'
-  //   ],
-  //   buttonText: 'Satın Al',
-  //   highlighted: false,
-  // },
 ];
 
 export default function PricingPage() {
@@ -69,12 +52,15 @@ export default function PricingPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Kredi Satın Al</h1>
           <p className="text-lg text-gray-600">
-            İhtiyacınıza uygun kredi paketi ile İngilizce seviyenizi ölçmeye başlayın
+            Her oturum 5 sorudan oluşur ve 1 kredi kullanır. İhtiyacınıza uygun paketi seçin.
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            5 oturum = 1 tam döngü (25 soru)
           </p>
         </div>
 
         <div className="flex justify-center">
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-xl grid gap-6 md:grid-cols-1">
             {PRICING_TIERS.map((tier) => (
               <div
                 key={tier.id}
@@ -93,9 +79,17 @@ export default function PricingPage() {
                 )}
 
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                {tier.popular && (
+                  <div className="absolute -top-3 right-4">
+                    <span className="bg-thy-red text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      Popüler
+                    </span>
+                  </div>
+                )}
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-gray-900">{tier.credits}</span>
                   <span className="text-gray-600 ml-2">kredi</span>
+                  <p className="text-sm text-gray-500 mt-1">{tier.credits} kredi içerir</p>
                 </div>
                 <div className="mb-6">
                   <span className="text-3xl font-bold text-gray-900">{tier.price}</span>

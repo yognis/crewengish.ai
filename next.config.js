@@ -3,6 +3,8 @@ const nextConfig = {
   // This tells Next.js to ignore test files when building pages
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'].filter(ext => !ext.includes('test')),
 
+  compress: true,
+
   // ESLint configuration for builds
   eslint: {
     // Warning: This allows production builds to successfully complete even if

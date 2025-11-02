@@ -30,7 +30,7 @@ This document summarizes the current state of the CrewEnglish.ai codebase, expla
 ### Data & Business Logic
 - `src/lib/database.types.ts`: typed Supabase schema generated via `supabase gen types`.  
 - `database.sql`: canonical schema (profiles, test/exam sessions/responses, credit_transactions) with RLS policies, triggers, and helper functions (auto-profile creation, credit deduction, storage bucket policies).  
-- `src/lib/exam-queries.ts`: shared Supabase queries for exam/test data.  
+- `src/app/api/exam/start/route.ts` & `src/app/api/exam/process/route.ts`: server-side orchestration for question generation and scoring (replaces the old `src/lib/exam-queries.ts`).  
 - `src/hooks/useDashboardData.ts`, `src/hooks/useTotalUsers.ts`: encapsulate dashboard queries + subscriptions.  
 - `src/constants/exam.ts`: centralizes limits for recordings, rate limiting, etc., reused across the front-end and API layer.
 
