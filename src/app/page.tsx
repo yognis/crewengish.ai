@@ -23,11 +23,6 @@ export default function HomePage() {
 
       {/* Hero Section - Enhanced */}
       <section className="relative overflow-hidden bg-gradient-to-br from-thy-red via-thy-darkRed to-red-900 pt-32 pb-20 lg:pt-40 lg:pb-32">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute h-full w-full bg-[url('/pattern.svg')] bg-repeat" />
-        </div>
-
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             {/* Badge */}
