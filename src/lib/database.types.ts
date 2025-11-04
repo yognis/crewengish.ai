@@ -17,6 +17,14 @@ export interface Database {
           department: 'pilot' | 'cabin_crew' | 'ground_staff' | 'other';
           credits: number;
           phone: string | null;
+          terms_accepted: boolean;
+          kvkk_accepted: boolean;
+          age_verified: boolean;
+          marketing_consent: boolean;
+          terms_accepted_at: string | null;
+          kvkk_accepted_at: string | null;
+          marketing_consent_at: string | null;
+          consent_date: string;
           created_at: string;
           updated_at: string;
         };
@@ -27,6 +35,14 @@ export interface Database {
           department: 'pilot' | 'cabin_crew' | 'ground_staff' | 'other';
           credits?: number;
           phone?: string | null;
+          terms_accepted?: boolean;
+          kvkk_accepted?: boolean;
+          age_verified?: boolean;
+          marketing_consent?: boolean;
+          terms_accepted_at?: string | null;
+          kvkk_accepted_at?: string | null;
+          marketing_consent_at?: string | null;
+          consent_date?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -37,6 +53,14 @@ export interface Database {
           department?: 'pilot' | 'cabin_crew' | 'ground_staff' | 'other';
           credits?: number;
           phone?: string | null;
+          terms_accepted?: boolean;
+          kvkk_accepted?: boolean;
+          age_verified?: boolean;
+          marketing_consent?: boolean;
+          terms_accepted_at?: string | null;
+          kvkk_accepted_at?: string | null;
+          marketing_consent_at?: string | null;
+          consent_date?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -235,6 +259,28 @@ export interface Database {
           submitted_at?: string | null;
           scored_at?: string | null;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      consent_audit: {
+        Row: {
+          id: number;
+          user_id: string;
+          consent_type: 'terms' | 'kvkk' | 'age' | 'marketing' | 'data_transfer' | 'special_category';
+          given: boolean;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          consent_type: 'terms' | 'kvkk' | 'age' | 'marketing' | 'data_transfer' | 'special_category';
+          given: boolean;
+          ip_address?: string | null;
+          user_agent?: string | null;
+        };
+        Update: {
+          // Audit log is append-only, no updates allowed
         };
         Relationships: [];
       };

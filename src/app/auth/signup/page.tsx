@@ -36,6 +36,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -135,6 +136,13 @@ export default function SignupPage() {
             email,
             fullName,
             phone,
+            termsAccepted: true,
+            kvkkAccepted: true,
+            ageVerified: true,
+            marketingConsent: false,
+            termsAcceptedAt: new Date().toISOString(),
+            kvkkAcceptedAt: new Date().toISOString(),
+            marketingConsentAt: null,
           }),
         });
 
@@ -589,6 +597,7 @@ export default function SignupPage() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
+              aria-describedby="signup-legal-note"
               className="w-full h-12 bg-thy-red hover:bg-thy-darkRed text-white font-semibold text-base rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {loading ? (
@@ -600,6 +609,36 @@ export default function SignupPage() {
                 <span>Kayıt Ol</span>
               )}
             </motion.button>
+
+            {/* Legal Notice */}
+            <p
+              id="signup-legal-note"
+              className="mt-3 text-center text-sm text-gray-600 leading-6"
+              aria-live="polite"
+            >
+              Kaydolarak{' '}
+              <Link 
+                href="/kullanim-kosullari" 
+                className="text-thy-red underline underline-offset-2 hover:text-thy-darkRed focus:outline-none focus:ring-2 focus:ring-thy-red focus:ring-offset-2 rounded"
+              >
+                Kullanım Koşulları
+              </Link>
+              ,{' '}
+              <Link 
+                href="/kvkk" 
+                className="text-thy-red underline underline-offset-2 hover:text-thy-darkRed focus:outline-none focus:ring-2 focus:ring-thy-red focus:ring-offset-2 rounded"
+              >
+                KVKK
+              </Link>
+              {' '}ve{' '}
+              <Link 
+                href="/gizlilik-politikasi" 
+                className="text-thy-red underline underline-offset-2 hover:text-thy-darkRed focus:outline-none focus:ring-2 focus:ring-thy-red focus:ring-offset-2 rounded"
+              >
+                Gizlilik Politikası
+              </Link>
+              &apos;nı kabul etmiş olursunuz.
+            </p>
           </form>
 
           {/* Login Link */}
@@ -608,19 +647,6 @@ export default function SignupPage() {
             <Link href="/auth/login" className="text-thy-red hover:underline font-medium">
               Giriş yapın
             </Link>
-          </div>
-
-          {/* Legal Text */}
-          <div className="mt-4 text-center text-xs text-gray-500">
-            Kayıt olarak{' '}
-            <Link href="/terms" className="underline hover:text-thy-red">
-              Kullanım Şartları
-            </Link>
-            {' '}ve{' '}
-            <Link href="/privacy" className="underline hover:text-thy-red">
-              Gizlilik Politikası
-            </Link>
-            &apos;nı kabul ediyorsunuz
           </div>
 
           {/* Mobile Features (show on mobile only) */}

@@ -175,7 +175,7 @@ export default function ProfilePage() {
 
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Profil Ayarları</h1>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Profile Information Section */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 lg:p-8">
             <div className="flex items-center gap-3 mb-6">
@@ -337,6 +337,51 @@ export default function ProfilePage() {
               </button>
             </form>
           </div>
+
+          {/* Membership Settings Section */}
+          <Link 
+            href="/dashboard/settings"
+            className="bg-white border border-gray-200 rounded-xl p-6 lg:p-8 hover:border-thy-red hover:shadow-md transition-all group"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                <Lock className="h-6 w-6 text-green-500" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Üyelik Bilgileri</h2>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Gizlilik ayarlarınızı yönetin, rızalarınızı kontrol edin ve KVKK haklarınızı kullanın.
+              </p>
+
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Gizlilik Ayarları
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Rıza Yönetimi
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  KVKK Hakları
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Hesap Silme
+                </li>
+              </ul>
+
+              <div className="pt-4">
+                <div className="w-full rounded-lg bg-green-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-600 flex items-center justify-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Ayarlara Git
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Security Info Card */}

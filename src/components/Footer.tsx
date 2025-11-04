@@ -58,7 +58,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:info@crewenglish.ai"
+                  href="mailto:crewenglish@crewcoach.ai"
                   className="text-gray-400 transition-colors hover:text-thy-red"
                 >
                   İletişim
@@ -90,12 +90,12 @@ export default function Footer() {
             <h3 className="mb-4 text-lg font-semibold">Yasal</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/terms" className="text-gray-400 transition-colors hover:text-thy-red">
-                  Kullanım Şartları
+                <Link href="/kullanim-kosullari" className="text-gray-400 transition-colors hover:text-thy-red">
+                  Kullanım Koşulları
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-400 transition-colors hover:text-thy-red">
+                <Link href="/gizlilik-politikasi" className="text-gray-400 transition-colors hover:text-thy-red">
                   Gizlilik Politikası
                 </Link>
               </li>
@@ -105,8 +105,28 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="text-gray-400 transition-colors hover:text-thy-red">
-                  Çerez Politikası
+                <Link href="/on-bilgilendirme" className="text-gray-400 transition-colors hover:text-thy-red">
+                  Ön Bilgilendirme
+                </Link>
+              </li>
+              <li>
+                <Link href="/mesafeli-satis" className="text-gray-400 transition-colors hover:text-thy-red">
+                  Mesafeli Satış
+                </Link>
+              </li>
+              <li className="pt-2 mt-2 border-t border-gray-800">
+                <Link href="/dashboard/settings#privacy" className="text-gray-400 transition-colors hover:text-thy-red">
+                  Rıza Yönetimi
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/settings#data" className="text-gray-400 transition-colors hover:text-thy-red">
+                  Verilerimi İndir
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/settings#delete" className="text-gray-400 transition-colors hover:text-thy-red">
+                  Hesabı Sil
                 </Link>
               </li>
             </ul>
@@ -151,7 +171,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:info@crewenglish.ai"
+                  href="mailto:crewenglish@crewcoach.ai"
                   className="flex items-center gap-2 text-gray-400 transition-colors hover:text-thy-red"
                 >
                   <Mail className="h-4 w-4" />

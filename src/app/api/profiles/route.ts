@@ -12,6 +12,13 @@ interface CreateProfileRequest {
   email: string;
   fullName: string;
   phone?: string;
+  termsAccepted?: boolean;
+  kvkkAccepted?: boolean;
+  ageVerified?: boolean;
+  marketingConsent?: boolean;
+  termsAcceptedAt?: string | null;
+  kvkkAcceptedAt?: string | null;
+  marketingConsentAt?: string | null;
 }
 
 type ProfileResponse = { success: true } | { error: string };
@@ -26,7 +33,11 @@ function isCreateProfileRequest(payload: unknown): payload is CreateProfileReque
     typeof candidate.id === "string" &&
     typeof candidate.email === "string" &&
     typeof candidate.fullName === "string" &&
-    (typeof candidate.phone === "undefined" || typeof candidate.phone === "string")
+    (typeof candidate.phone === "undefined" || typeof candidate.phone === "string") &&
+    (typeof candidate.termsAccepted === "undefined" || typeof candidate.termsAccepted === "boolean") &&
+    (typeof candidate.kvkkAccepted === "undefined" || typeof candidate.kvkkAccepted === "boolean") &&
+    (typeof candidate.ageVerified === "undefined" || typeof candidate.ageVerified === "boolean") &&
+    (typeof candidate.marketingConsent === "undefined" || typeof candidate.marketingConsent === "boolean")
   );
 }
 
@@ -43,7 +54,19 @@ export async function POST(
       );
     }
 
-    const { id, email, fullName, phone } = body;
+    const { 
+      id, 
+      email, 
+      fullName, 
+      phone,
+      termsAccepted,
+      kvkkAccepted,
+      ageVerified,
+      marketingConsent,
+      termsAcceptedAt,
+      kvkkAcceptedAt,
+      marketingConsentAt 
+    } = body;
     const timestamp = new Date().toISOString();
 
     const {
@@ -83,6 +106,14 @@ export async function POST(
         phone: phone ?? null,
         department: "other",
         credits: 5,
+        terms_accepted: termsAccepted ?? false,
+        kvkk_accepted: kvkkAccepted ?? false,
+        age_verified: ageVerified ?? false,
+        marketing_consent: marketingConsent ?? false,
+        terms_accepted_at: termsAcceptedAt ?? null,
+        kvkk_accepted_at: kvkkAcceptedAt ?? null,
+        marketing_consent_at: marketingConsentAt ?? null,
+        consent_date: timestamp,
         created_at: timestamp,
         updated_at: timestamp,
       };
@@ -98,6 +129,16 @@ export async function POST(
           throw insertError;
         }
       }
+
+      // Log consent events to audit table
+      const consentEvents = [
+        { user_id: id, consent_type: 'terms', given: termsAccepted ?? false },
+        { user_id: id, consent_type: 'kvkk', given: kvkkAccepted ?? false },
+        { user_id: id, consent_type: 'age', given: ageVerified ?? false },
+        { user_id: id, consent_type: 'marketing', given: marketingConsent ?? false },
+      ];
+
+      await supabaseAdmin.from('consent_audit').insert(consentEvents);
     }
 
     return NextResponse.json({ success: true });
