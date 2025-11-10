@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 import { env } from '@/lib/env';
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-
-type SessionCategory =
-  | 'introduction'
-  | 'aviation'
-  | 'situational'
-  | 'cultural'
-  | 'professional';
+import { selectExamQuestions } from '@/lib/question-bank';
+import {
+  CATEGORY_SYSTEM_PROMPTS,
+  getCategoryDisplayName,
+  type SessionCategory,
+} from '@/shared/exam-config';
 
 interface StartExamPayload {
   sessionId: string;
@@ -23,30 +23,6 @@ const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
 
-const CATEGORY_SYSTEM_PROMPTS: Record<SessionCategory, string> = {
-  introduction: `You are an English speaking examiner for Turkish Airlines cabin crew candidates.
-Session 1 focuses on personal background, daily routines, motivation, and basic workplace communication (Level A2-B1).
-Keep the tone professional yet warm. Questions must be relevant to aviation context.`,
-  aviation: `You are an English speaking examiner for Turkish Airlines cabin crew candidates.
-Session 2 focuses on aviation procedures, safety, teamwork, and professional responsibilities (Level B1-B2).
-Ask scenario-based or duty-related questions.`,
-  situational: `You are an English speaking examiner for Turkish Airlines cabin crew candidates.
-Session 3 focuses on situational awareness, problem solving, and decision making under pressure (Level B2).
-Create realistic cabin scenarios requiring judgement.`,
-  cultural: `You are an English speaking examiner for Turkish Airlines cabin crew candidates.
-Session 4 focuses on intercultural communication, destination awareness, and premium service for diverse passengers (Level B2-C1).`,
-  professional: `You are an English speaking examiner for Turkish Airlines cabin crew candidates.
-Session 5 focuses on leadership, long-term professional development, adaptability, and corporate professionalism (Level C1-C2).`,
-};
-
-const CATEGORY_DISPLAY_NAMES: Record<SessionCategory, string> = {
-  introduction: 'Personal & Introduction',
-  aviation: 'Aviation & Professional Duties',
-  situational: 'Situational & Problem Solving',
-  cultural: 'Cultural & International Communication',
-  professional: 'Career & Professional Development',
-};
-
 function buildFirstQuestionPrompt({
   sessionCategory,
   sessionNumber,
@@ -57,7 +33,7 @@ function buildFirstQuestionPrompt({
   totalQuestions: number;
 }): string {
   return `We are conducting the Turkish Airlines speaking exam.
-Session ${sessionNumber}: ${CATEGORY_DISPLAY_NAMES[sessionCategory]}.
+Session ${sessionNumber}: ${getCategoryDisplayName(sessionCategory)}.
 This is question 1 of ${totalQuestions}.
 
 Produce JSON with the following shape:
@@ -84,12 +60,42 @@ function sanitizeQuestionContext(input?: string | null): string | null {
   return value.replace(/\s+/g, ' ').slice(0, 700);
 }
 
+function parseGeneratedQuestion(
+  raw: string
+): { question_text: string; question_context: string | null } | null {
+  try {
+    const parsed = JSON.parse(raw) as {
+      question_text?: unknown;
+      question_context?: unknown;
+    };
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      return null;
+    }
+
+    if (typeof parsed.question_text !== 'string' || !parsed.question_text.trim()) {
+      return null;
+    }
+
+    const questionText = parsed.question_text.trim();
+    const questionContext =
+      typeof parsed.question_context === 'string' && parsed.question_context.trim().length > 0
+        ? parsed.question_context.trim()
+        : null;
+
+    return {
+      question_text: questionText,
+      question_context: questionContext,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser(supabase);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -146,32 +152,84 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: CATEGORY_SYSTEM_PROMPTS[sessionCategory] },
-        { role: 'user', content: buildFirstQuestionPrompt({ sessionCategory, sessionNumber, totalQuestions }) },
-      ],
-      temperature: 0.7,
-      response_format: { type: 'json_object' },
-    });
+    const bankQuestions = await selectExamQuestions(sessionCategory, totalQuestions);
 
-    let firstQuestion: {
-      question_text: string;
-      question_context?: string | null;
-    };
+    let questionSource: 'bank' | 'dynamic' = 'dynamic';
+    let rawQuestionText: string | undefined;
+    let rawQuestionContext: string | null | undefined;
 
-    try {
-      firstQuestion = JSON.parse(
-        completion.choices[0].message.content ?? '{}',
-      ) as { question_text: string; question_context?: string | null };
-    } catch (parseError) {
-      console.error('[exam/start] Failed to parse first question JSON:', parseError);
-      return NextResponse.json({ error: 'İlk soru oluşturulamadı.' }, { status: 500 });
+    if (bankQuestions && bankQuestions.length > 0) {
+      const bankQuestion = bankQuestions[0];
+      questionSource = 'bank';
+      rawQuestionText = bankQuestion.question_text;
+
+      const contextParts: string[] = [];
+      if (bankQuestion.question_text_turkish) {
+        contextParts.push(`TR: ${bankQuestion.question_text_turkish}`);
+      }
+      if (bankQuestion.expected_keywords?.length) {
+        contextParts.push(`Keywords: ${bankQuestion.expected_keywords.join(', ')}`);
+      }
+      if (bankQuestion.evaluation_focus && Object.keys(bankQuestion.evaluation_focus).length > 0) {
+        const focusSummary = Object.entries(bankQuestion.evaluation_focus)
+          .map(([key, weight]) =>
+            typeof weight === 'number' ? `${key}:${weight}` : key
+          )
+          .join(', ');
+        if (focusSummary) {
+          contextParts.push(`Focus: ${focusSummary}`);
+        }
+      }
+      rawQuestionContext = contextParts.length > 0 ? contextParts.join(' | ') : null;
+    } else {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: CATEGORY_SYSTEM_PROMPTS[sessionCategory] },
+          {
+            role: 'user',
+            content: buildFirstQuestionPrompt({
+              sessionCategory,
+              sessionNumber,
+              totalQuestions,
+            }),
+          },
+          {
+            role: 'user',
+            content:
+              'Return ONLY valid JSON matching {"question_text": string, "question_context": string | null}. No markdown.',
+          },
+        ],
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+      });
+
+      const rawContent = completion.choices[0].message.content ?? '{}';
+      const parsedQuestion = parseGeneratedQuestion(rawContent);
+
+      if (parsedQuestion) {
+        rawQuestionText = parsedQuestion.question_text;
+        rawQuestionContext = parsedQuestion.question_context;
+      } else {
+        console.warn(
+          `[exam/start] Failed to parse generated question JSON for ${sessionCategory}; using default prompt. Raw: ${rawContent}`
+        );
+        rawQuestionText =
+          'Can you introduce yourself and tell us about your daily duties as a cabin crew member?';
+        rawQuestionContext = null;
+      }
     }
 
-    const sanitizedText = sanitizeQuestionText(firstQuestion.question_text);
-    const sanitizedContext = sanitizeQuestionContext(firstQuestion.question_context);
+    const sanitizedText = sanitizeQuestionText(rawQuestionText);
+    const sanitizedContext = sanitizeQuestionContext(rawQuestionContext);
+
+    const source: 'bank' | 'dynamic' = questionSource;
+    const bankQuestionId =
+      source === 'bank' && bankQuestions?.[0] ? bankQuestions[0].id : null;
+
+    console.log(
+      `[exam/start] Using ${questionSource === 'bank' ? 'question bank' : 'dynamic'} question for ${sessionCategory}`
+    );
 
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from('exam_questions')
@@ -180,6 +238,8 @@ export async function POST(request: NextRequest) {
         question_number: 1,
         question_text: sanitizedText,
         question_context: sanitizedContext,
+        source,
+        bank_question_id: bankQuestionId,
       })
       .select('id, question_number, question_text, question_context')
       .maybeSingle();
@@ -193,6 +253,12 @@ export async function POST(request: NextRequest) {
       .from('exam_sessions')
       .update({ current_question_number: 1 })
       .eq('id', sessionId);
+
+    console.log(
+      `[exam/start] Question 1 stored via ${source}${
+        bankQuestionId ? ` (bank_id=${bankQuestionId})` : ''
+      }`
+    );
 
     return NextResponse.json({
       session: {

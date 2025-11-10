@@ -173,6 +173,14 @@ export interface Database {
           session_category: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional' | null;
           session_number: number | null;
           category_display_name: string | null;
+          scoring_model: string | null;
+          scoring_version: string | null;
+          lat_ms_transcribe: number | null;
+          lat_ms_score: number | null;
+          lat_ms_nextq: number | null;
+          lat_ms_total: number | null;
+          scoring_fallback_used: boolean | null;
+          scoring_timeout: boolean | null;
         };
         Insert: {
           id?: string;
@@ -191,6 +199,14 @@ export interface Database {
           session_category?: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional' | null;
           session_number?: number | null;
           category_display_name?: string | null;
+          scoring_model?: string | null;
+          scoring_version?: string | null;
+          lat_ms_transcribe?: number | null;
+          lat_ms_score?: number | null;
+          lat_ms_nextq?: number | null;
+          lat_ms_total?: number | null;
+          scoring_fallback_used?: boolean | null;
+          scoring_timeout?: boolean | null;
         };
         Update: {
           status?: 'pending' | 'in_progress' | 'completed' | 'exited';
@@ -207,6 +223,14 @@ export interface Database {
           session_category?: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional' | null;
           session_number?: number | null;
           category_display_name?: string | null;
+          scoring_model?: string | null;
+          scoring_version?: string | null;
+          lat_ms_transcribe?: number | null;
+          lat_ms_score?: number | null;
+          lat_ms_nextq?: number | null;
+          lat_ms_total?: number | null;
+          scoring_fallback_used?: boolean | null;
+          scoring_timeout?: boolean | null;
         };
         Relationships: [];
       };
@@ -227,6 +251,8 @@ export interface Database {
           submitted_at: string | null;
           scored_at: string | null;
           created_at: string;
+          source: 'bank' | 'dynamic';
+          bank_question_id: string | null;
         };
         Insert: {
           id?: string;
@@ -244,6 +270,8 @@ export interface Database {
           submitted_at?: string | null;
           scored_at?: string | null;
           created_at?: string;
+          source?: 'bank' | 'dynamic';
+          bank_question_id?: string | null;
         };
         Update: {
           question_number?: number;
@@ -259,6 +287,8 @@ export interface Database {
           submitted_at?: string | null;
           scored_at?: string | null;
           created_at?: string;
+          source?: 'bank' | 'dynamic';
+          bank_question_id?: string | null;
         };
         Relationships: [];
       };
@@ -286,7 +316,34 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      random_questions: {
+        Args: {
+          p_section: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional';
+          p_count: number;
+        };
+        Returns: Array<{
+          id: string;
+          section: 'introduction' | 'aviation' | 'situational' | 'cultural' | 'professional';
+          difficulty: 'easy' | 'medium' | 'hard';
+          question_text: string;
+          question_text_turkish: string | null;
+          expected_keywords: string[] | null;
+          evaluation_focus: Json | null;
+          times_used: number | null;
+          avg_score: number | null;
+          last_used_at: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        }>;
+      };
+      update_question_usage: {
+        Args: {
+          p_question_ids: string[];
+        };
+        Returns: undefined;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
