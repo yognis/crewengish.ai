@@ -8,6 +8,7 @@ import { User, Lock, Mail, ArrowLeft, CheckCircle, AlertCircle, Loader2 } from '
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/client';
 
 export default function ProfilePage() {
@@ -34,8 +35,8 @@ export default function ProfilePage() {
 
   const loadProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const { user } = await getSafeUser(supabase);
+
       if (!user) {
         toast.error('Oturum bulunamadı. Lütfen giriş yapın.');
         router.push('/auth/login');
@@ -69,8 +70,11 @@ export default function ProfilePage() {
     setUpdatingProfile(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Kullanıcı oturumu bulunamadı');
+      const { user } = await getSafeUser(supabase);
+      if (!user) {
+        toast.error('Kullanıcı oturumu bulunamadı');
+        return;
+      }
 
       const { error } = await supabase
         .from('profiles')

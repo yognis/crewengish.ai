@@ -5,12 +5,13 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { 
+import {
   AlertTriangle,
   ArrowLeft,
   Trash2,
-  Loader2
+  Loader2,
 } from 'lucide-react';
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DeleteAccountPage() {
@@ -36,7 +37,7 @@ export default function DeleteAccountPage() {
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { user } = await getSafeUser(supabase);
       if (!user) {
         toast.error('Kullanıcı bulunamadı');
         return;

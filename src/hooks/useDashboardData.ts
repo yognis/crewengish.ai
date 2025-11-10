@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/database.types';
 
@@ -110,21 +112,23 @@ export interface ExamSummary {
   overall_score: number | null;
 }
 
+const EMPTY_DASHBOARD_DATA: DashboardData = {
+  profile: null,
+  stats: {
+    totalTests: 0,
+    avgScore: 0,
+    bestScore: 0,
+    lastTestDate: null,
+  },
+  recentTests: [],
+  chartData: [],
+  examSessions: [],
+};
+
 export function useDashboardData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<DashboardData>({
-    profile: null,
-    stats: {
-      totalTests: 0,
-      avgScore: 0,
-      bestScore: 0,
-      lastTestDate: null,
-    },
-    recentTests: [],
-    chartData: [],
-    examSessions: [],
-  });
+  const [data, setData] = useState<DashboardData>(EMPTY_DASHBOARD_DATA);
 
   const supabase = createClient();
 
@@ -134,13 +138,12 @@ export function useDashboardData() {
         setLoading(true);
         setError(null);
 
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError) throw userError;
-        if (!user) throw new Error('User not authenticated');
+        const { user } = await getSafeUser(supabase);
+        if (!user) {
+          setData(EMPTY_DASHBOARD_DATA);
+          setLoading(false);
+          return;
+        }
 
         const [
           profileRes,

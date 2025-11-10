@@ -130,10 +130,10 @@ export function ExamHistoryCard({ session, onClick }: ExamHistoryCardProps) {
       {session.status === 'completed' && session.overall_score !== null && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 pt-4 border-t border-gray-100">
           {[
-            { label: 'Akıcılık', score: session.fluency_score },
-            { label: 'Dilbilgisi', score: session.grammar_score },
-            { label: 'Kelime', score: session.vocabulary_score },
-            { label: 'Telaffuz', score: session.pronunciation_score },
+            { label: 'Akıcılık', score: session.fluency_score ?? null },
+            { label: 'Dilbilgisi', score: session.grammar_score ?? null },
+            { label: 'Kelime', score: session.vocabulary_score ?? null },
+            { label: 'Telaffuz', score: session.pronunciation_score ?? null },
           ].map((skill, idx) => (
             <div key={idx} className="text-center">
               <div className="text-xs text-gray-500 mb-1">{skill.label}</div>

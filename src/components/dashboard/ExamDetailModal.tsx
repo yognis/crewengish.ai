@@ -105,10 +105,10 @@ export function ExamDetailModal({ sessionId, onClose }: ExamDetailModalProps) {
                     {/* Skill Breakdown */}
                     <div className="space-y-3">
                       {[
-                        { label: 'Akıcılık', score: session.fluency_score, key: 'fluency' },
-                        { label: 'Dilbilgisi', score: session.grammar_score, key: 'grammar' },
-                        { label: 'Kelime Dağarcığı', score: session.vocabulary_score, key: 'vocabulary' },
-                        { label: 'Telaffuz', score: session.pronunciation_score, key: 'pronunciation' },
+                        { label: 'Akıcılık', score: session.fluency_score ?? null, key: 'fluency' },
+                        { label: 'Dilbilgisi', score: session.grammar_score ?? null, key: 'grammar' },
+                        { label: 'Kelime Dağarcığı', score: session.vocabulary_score ?? null, key: 'vocabulary' },
+                        { label: 'Telaffuz', score: session.pronunciation_score ?? null, key: 'pronunciation' },
                       ].map((skill) => (
                         <div key={skill.key} className="space-y-1">
                           <div className="flex items-center justify-between text-sm">

@@ -5,15 +5,16 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { 
-  Shield, 
-  CheckCircle2, 
-  Settings as SettingsIcon, 
-  Mail, 
+import {
+  Shield,
+  CheckCircle2,
+  Settings as SettingsIcon,
+  Mail,
   Trash2,
   AlertTriangle,
-  ArrowLeft
+  ArrowLeft,
 } from 'lucide-react';
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/client';
 
 interface UserConsents {
@@ -38,8 +39,9 @@ export default function PrivacySettingsPage() {
 
   const loadUserConsents = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { user } = await getSafeUser(supabase);
       if (!user) {
+        setUserEmail('');
         router.push('/auth/login');
         return;
       }
@@ -66,8 +68,11 @@ export default function PrivacySettingsPage() {
   const updateMarketingConsent = async (value: boolean) => {
     setUpdating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { user } = await getSafeUser(supabase);
+      if (!user) {
+        toast.error('Oturum bulunamadı');
+        return;
+      }
 
       const { error } = await supabase
         .from('profiles')

@@ -33,6 +33,8 @@ interface QuestionDetail {
   feedback: string | null;
   strengths: string[] | null;
   improvements: string[] | null;
+  source: 'bank' | 'dynamic';
+  bank_question_id: string | null;
 }
 
 export default function ExamResultsPage({ params }: { params: { sessionId: string } }) {
@@ -59,7 +61,9 @@ export default function ExamResultsPage({ params }: { params: { sessionId: strin
 
       const { data: questionData, error: questionError } = await supabase
         .from('exam_questions')
-        .select('question_number, question_text, question_context, transcription, overall_score, scores, feedback, strengths, improvements')
+        .select(
+          'question_number, question_text, question_context, transcription, overall_score, scores, feedback, strengths, improvements, source, bank_question_id'
+        )
         .eq('session_id', params.sessionId)
         .order('question_number', { ascending: true });
       if (questionError || !questionData) throw questionError || new Error('Soru detayları alınamadı');
@@ -188,6 +192,17 @@ export default function ExamResultsPage({ params }: { params: { sessionId: strin
                     Soru {item.question_number}
                   </p>
                   <p className="text-lg font-semibold text-gray-900">{item.question_text}</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    {item.source === 'bank' ? (
+                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                        Banka Sorusu
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                        Dinamik Soru
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className="rounded-full bg-thy-red/10 px-4 py-1 text-sm font-semibold text-thy-red">
                   {item.overall_score ?? '—'}/100

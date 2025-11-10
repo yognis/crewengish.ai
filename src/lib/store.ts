@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { createClient } from './supabase/client';
 import type { Database } from './database.types';
+import { getSafeUser } from './getSafeUser';
 import { logger } from './logger';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -23,17 +24,7 @@ export const useAppStore = create<AppState>((set) => ({
     try {
       const supabase = createClient();
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error('Auth error:', userError);
-        set({ profile: null, loading: false, error: 'Oturum hatası' });
-        return;
-      }
-
+      const { user } = await getSafeUser(supabase);
       if (!user) {
         logger.debug('No user session');
         set({ profile: null, loading: false, error: null });

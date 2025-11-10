@@ -20,7 +20,11 @@ import {
 
 import { useAppStore } from '@/lib/store';
 import { createClient } from '@/lib/supabase/client';
-import { SESSION_CONFIGS, type SessionConfig, type SessionCategory } from '@/types/session-categories';
+import {
+  SESSION_CONFIGS as BASE_SESSION_CONFIGS,
+  type SessionCategory,
+  type SessionConfig as SharedSessionConfig,
+} from '@/shared/exam-config';
 
 // Use process.env.NEXT_PUBLIC_* directly - Next.js inlines these at build time
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,6 +42,38 @@ interface UnlockedSessions {
   unlocked: Set<number>;
   completed: Map<number, { score: number; date: string }>;
 }
+
+interface SessionUnlockRequirement {
+  requiresSession?: number;
+  minScore?: number;
+}
+
+interface SessionConfig extends SharedSessionConfig {
+  icon: string;
+  questionCount: number;
+  unlockRequirement: SessionUnlockRequirement;
+}
+
+const SESSION_ICONS: Record<SessionCategory, string> = {
+  introduction: '👋',
+  aviation: '✈️',
+  situational: '🤔',
+  cultural: '🌍',
+  professional: '📈',
+};
+
+const SESSION_CONFIGS: SessionConfig[] = BASE_SESSION_CONFIGS.map((config) => ({
+  ...config,
+  icon: SESSION_ICONS[config.category],
+  questionCount: 5,
+  unlockRequirement:
+    config.sessionNumber === 1
+      ? {}
+      : {
+          requiresSession: config.sessionNumber - 1,
+          minScore: config.unlockThreshold,
+        },
+}));
 
 export default function ExamStartPage() {
   const router = useRouter();

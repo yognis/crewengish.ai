@@ -18,7 +18,8 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 import { getAudioFileExtension } from '@/lib/audio';
-import { getSessionConfig, type SessionCategory } from '@/types/session-categories';
+import { getSessionConfig } from '@/types/session-categories';
+import { type SessionCategory } from '@/shared/exam-config';
 
 // NEW: Chat architecture imports
 import ChatContainer from '@/components/exam/chat/ChatContainer';
@@ -612,7 +613,7 @@ export default function ExamSessionPage({ params }: { params: { sessionId: strin
               >
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
-              {menuOpen && (
+                {menuOpen && (
                 <div
                   ref={menuRef}
                   id={menuId}

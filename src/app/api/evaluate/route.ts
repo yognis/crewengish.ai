@@ -6,6 +6,8 @@ import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { EXAM_CONSTANTS } from '@/constants/exam';
+import { getSafeUser } from '@/lib/getSafeUser';
+import { SCORING_PROMPT } from '@/shared/scoring-config';
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
@@ -23,15 +25,14 @@ interface EvaluationResult {
   grammarScore: number;
   vocabularyScore: number;
   pronunciationScore: number;
+  contentScore: number;
   feedback: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser(supabase);
 
     const forwardedFor = request.headers
       .get('x-forwarded-for')
@@ -81,44 +82,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const evaluationPrompt = `You are an expert English language evaluator for Turkish Airlines employees. Evaluate the following speaking test response according to THY internal English proficiency standards.
+    const evaluationPrompt = `QUESTION:
+${question}
 
-QUESTION: ${question}
-
-RESPONSE TRANSCRIPT: ${transcript}
+RESPONSE TRANSCRIPT:
+${transcript}
 
 RESPONSE DURATION: ${duration} seconds
 
-Evaluate on these criteria (0-100 scale):
-
-1. FLUENCY & COHERENCE (25%): Natural flow, minimal hesitation, logical structure
-2. GRAMMAR ACCURACY (25%): Correct tenses, sentence structure, articles
-3. VOCABULARY RANGE (25%): Aviation/corporate terminology, appropriate word choice
-4. PRONUNCIATION (25%): Clarity, Turkish accent impact on intelligibility
-
-Provide your evaluation in JSON format:
-{
-  "fluencyScore": 0-100,
-  "grammarScore": 0-100,
-  "vocabularyScore": 0-100,
-  "pronunciationScore": 0-100,
-  "feedback": "Detailed feedback in Turkish (2-3 sentences covering strengths and specific areas for improvement)"
-}
-
-Consider:
-- For Turkish speakers: Common issues include article usage, present perfect tense, and th/v sounds
-- Aviation context: Technical vocabulary usage, professional communication standards
-- Response relevance: Did they answer the question appropriately?
-- Response length: Adequate development of ideas
-
-Be constructive but realistic in scoring. THY requires B2-C1 level English for most positions.`;
+EVALUATION CONTEXT:
+- Consider aviation professionalism, clarity, and relevance.
+- Caller is a Turkish Airlines employee; highlight strengths and areas to improve.`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: 'You are an expert English language evaluator specializing in aviation and corporate English for Turkish speakers.',
+          content: SCORING_PROMPT,
         },
         {
           role: 'user',
@@ -133,20 +114,34 @@ Be constructive but realistic in scoring. THY requires B2-C1 level English for m
       completion.choices[0].message.content || '{}'
     );
 
+    const scores = evaluation?.scores ?? {};
+    const fluencyScore = Number(scores.fluency ?? 0);
+    const pronunciationScore = Number(scores.pronunciation ?? 0);
+    const grammarScore = Number(scores.grammar ?? 0);
+    const vocabularyScore = Number(scores.vocabulary ?? 0);
+    const contentScore = Number(scores.content ?? 0);
+
+    const scoreValues = [
+      fluencyScore,
+      pronunciationScore,
+      grammarScore,
+      vocabularyScore,
+      contentScore,
+    ].filter((value) => Number.isFinite(value)) as number[];
+
     const overallScore = Math.round(
-      (evaluation.fluencyScore * 0.25 +
-        evaluation.grammarScore * 0.25 +
-        evaluation.vocabularyScore * 0.25 +
-        evaluation.pronunciationScore * 0.25)
+      scoreValues.reduce((sum, value) => sum + value, 0) /
+        Math.max(scoreValues.length, 1)
     );
 
     const result: EvaluationResult = {
       overallScore,
-      fluencyScore: evaluation.fluencyScore,
-      grammarScore: evaluation.grammarScore,
-      vocabularyScore: evaluation.vocabularyScore,
-      pronunciationScore: evaluation.pronunciationScore,
-      feedback: evaluation.feedback,
+      fluencyScore,
+      grammarScore,
+      vocabularyScore,
+      pronunciationScore,
+      contentScore,
+      feedback: evaluation.feedback ?? '',
     };
 
     return NextResponse.json(result, { headers: rateLimitHeaders });

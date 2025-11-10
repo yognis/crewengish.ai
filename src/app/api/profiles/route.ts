@@ -12,13 +12,7 @@ interface CreateProfileRequest {
   email: string;
   fullName: string;
   phone?: string;
-  termsAccepted?: boolean;
-  kvkkAccepted?: boolean;
-  ageVerified?: boolean;
   marketingConsent?: boolean;
-  termsAcceptedAt?: string | null;
-  kvkkAcceptedAt?: string | null;
-  marketingConsentAt?: string | null;
 }
 
 type ProfileResponse = { success: true } | { error: string };
@@ -34,9 +28,6 @@ function isCreateProfileRequest(payload: unknown): payload is CreateProfileReque
     typeof candidate.email === "string" &&
     typeof candidate.fullName === "string" &&
     (typeof candidate.phone === "undefined" || typeof candidate.phone === "string") &&
-    (typeof candidate.termsAccepted === "undefined" || typeof candidate.termsAccepted === "boolean") &&
-    (typeof candidate.kvkkAccepted === "undefined" || typeof candidate.kvkkAccepted === "boolean") &&
-    (typeof candidate.ageVerified === "undefined" || typeof candidate.ageVerified === "boolean") &&
     (typeof candidate.marketingConsent === "undefined" || typeof candidate.marketingConsent === "boolean")
   );
 }
@@ -54,20 +45,49 @@ export async function POST(
       );
     }
 
-    const { 
-      id, 
-      email, 
-      fullName, 
-      phone,
-      termsAccepted,
-      kvkkAccepted,
-      ageVerified,
-      marketingConsent,
-      termsAcceptedAt,
-      kvkkAcceptedAt,
-      marketingConsentAt 
-    } = body;
-    const timestamp = new Date().toISOString();
+    const { id, email, fullName, phone, marketingConsent } = body;
+    const now = new Date().toISOString();
+
+    // 🔒 BACKEND DECIDES CONSENT (Hard-coded, no trust in frontend)
+    const CONSENT_TERMS = true;
+    const CONSENT_KVKK = true;
+    const CONSENT_AGE = true;
+    const CONSENT_MARKETING = !!marketingConsent;
+
+    console.log("🔒 CONSENT VALUES:", {
+      terms: CONSENT_TERMS,
+      kvkk: CONSENT_KVKK,
+      age: CONSENT_AGE,
+      marketing: CONSENT_MARKETING,
+    });
+
+    // ---- CONSENT AUDIT (runs for both insert & update) ----
+    const consentEvents: Database["public"]["Tables"]["consent_audit"]["Insert"][] = [
+      { user_id: id, consent_type: "terms", given: CONSENT_TERMS },
+      { user_id: id, consent_type: "kvkk", given: CONSENT_KVKK },
+      { user_id: id, consent_type: "age", given: CONSENT_AGE },
+      { user_id: id, consent_type: "marketing", given: CONSENT_MARKETING },
+    ];
+
+    console.log("🔍 AUDIT UPSERT TRY", { user_id: id, count: consentEvents.length });
+
+    const { data: auditData, error: auditError } = await supabaseAdmin
+      .from("consent_audit")
+      .upsert(consentEvents, { onConflict: "user_id,consent_type", ignoreDuplicates: true })
+      .select();
+
+    if (auditError) {
+      console.error("❌ AUDIT UPSERT FAILED", {
+        code: auditError.code,
+        message: auditError.message,
+        details: auditError.details,
+        hint: auditError.hint,
+      });
+    } else {
+      console.log("✅ AUDIT UPSERT OK", { insertedOrIgnored: auditData?.length ?? 0 });
+    }
+
+    // ---- END AUDIT ----
 
     const {
       data: existingProfile,
@@ -87,7 +107,7 @@ export async function POST(
         email,
         full_name: fullName,
         phone: phone ?? null,
-        updated_at: timestamp,
+        updated_at: now,
       };
 
       const { error: updateError } = await supabaseAdmin
@@ -106,16 +126,16 @@ export async function POST(
         phone: phone ?? null,
         department: "other",
         credits: 5,
-        terms_accepted: termsAccepted ?? false,
-        kvkk_accepted: kvkkAccepted ?? false,
-        age_verified: ageVerified ?? false,
-        marketing_consent: marketingConsent ?? false,
-        terms_accepted_at: termsAcceptedAt ?? null,
-        kvkk_accepted_at: kvkkAcceptedAt ?? null,
-        marketing_consent_at: marketingConsentAt ?? null,
-        consent_date: timestamp,
-        created_at: timestamp,
-        updated_at: timestamp,
+        terms_accepted: CONSENT_TERMS,
+        kvkk_accepted: CONSENT_KVKK,
+        age_verified: CONSENT_AGE,
+        marketing_consent: CONSENT_MARKETING,
+        terms_accepted_at: now,
+        kvkk_accepted_at: now,
+        marketing_consent_at: CONSENT_MARKETING ? now : null,
+        consent_date: now,
+        created_at: now,
+        updated_at: now,
       };
 
       const { error: insertError } = await supabaseAdmin
@@ -130,15 +150,6 @@ export async function POST(
         }
       }
 
-      // Log consent events to audit table
-      const consentEvents = [
-        { user_id: id, consent_type: 'terms', given: termsAccepted ?? false },
-        { user_id: id, consent_type: 'kvkk', given: kvkkAccepted ?? false },
-        { user_id: id, consent_type: 'age', given: ageVerified ?? false },
-        { user_id: id, consent_type: 'marketing', given: marketingConsent ?? false },
-      ];
-
-      await supabaseAdmin.from('consent_audit').insert(consentEvents);
     }
 
     return NextResponse.json({ success: true });

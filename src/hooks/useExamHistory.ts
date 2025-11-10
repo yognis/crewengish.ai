@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/client';
 
 export interface ExamSession {
@@ -9,11 +11,11 @@ export interface ExamSession {
   current_question_number: number;
   total_questions: number;
   overall_score: number | null;
-  fluency_score: number | null;
-  grammar_score: number | null;
-  vocabulary_score: number | null;
-  pronunciation_score: number | null;
-  relevance_score: number | null;
+  fluency_score?: number | null;
+  grammar_score?: number | null;
+  vocabulary_score?: number | null;
+  pronunciation_score?: number | null;
+  relevance_score?: number | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -86,9 +88,20 @@ export function useExamHistory(): UseExamHistoryReturn {
       setError(null);
 
       // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) throw new Error('User not authenticated');
+      const { user } = await getSafeUser(supabase);
+      if (!user) {
+        setSessions([]);
+        setStats({
+          totalExams: 0,
+          completedExams: 0,
+          averageScore: 0,
+          bestScore: 0,
+          totalDuration: 0,
+          lastExamDate: null,
+        });
+        setLoading(false);
+        return;
+      }
 
       // Build query based on filters
       let query = supabase

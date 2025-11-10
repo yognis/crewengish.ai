@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Menu, X, CreditCard, User } from 'lucide-react';
+import { getSafeUser } from '@/lib/getSafeUser';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 
@@ -25,10 +26,22 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    let isMounted = true;
+
+    async function loadUserState() {
+      const { user } = await getSafeUser(supabase);
+      if (!isMounted) return;
       setUser(user);
-      if (user) loadProfile();
-    });
+      if (user) {
+        await loadProfile();
+      }
+    }
+
+    loadUserState();
+
+    return () => {
+      isMounted = false;
+    };
   }, [supabase, loadProfile]);
 
   const handleLogout = async () => {

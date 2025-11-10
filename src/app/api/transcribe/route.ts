@@ -7,6 +7,7 @@ import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { EXAM_CONSTANTS } from '@/constants/exam';
 import { logger } from '@/lib/logger';
+import { getSafeUser } from '@/lib/getSafeUser';
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
@@ -15,9 +16,7 @@ const openai = new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser(supabase);
 
     const forwardedFor = request.headers
       .get('x-forwarded-for')
